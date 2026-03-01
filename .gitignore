@@ -4,6 +4,10 @@ __pycache__/
 .idea/
 .ipynb_checkpoints/
 
+# Data or outputs
+scratch/data/
+scratch/output/
+
 # PyCharm
 .idea/
 *.iml
