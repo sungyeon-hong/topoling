@@ -1,0 +1,23 @@
+[project]
+name = "topoling"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "arxiv>=4.0.0",
+    "duckdb>=1.5.3",
+    "feedparser>=6.0.12",
+    "gudhi>=3.12.0",
+    "jupyterlab>=4.5.7",
+    "matplotlib>=3.10.9",
+    "pandas>=3.0.3",
+    "persim>=0.3.8",
+    "pyarrow>=24.0.0",
+    "requests>=2.33.1",
+    "ripser>=0.6.15",
+    "scikit-learn>=1.8.0",
+    "sentence-transformers>=5.5.1",
+    "tqdm>=4.67.3",
+    "umap-learn>=0.5.12",
+]

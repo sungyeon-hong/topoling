@@ -4,10 +4,19 @@ __pycache__/
 .idea/
 .ipynb_checkpoints/
 
-# Data or outputs
+# PyCharm
+*.iml
+
+# Data. Everything under data/ is reproducible from the collectors in src/,
+# and the full PoetryDB pull is ~71 MB. Regenerate with:
+#   uv run python src/collect_poetrydb_corpus.py
+#   uv run python src/poetry_forms.py
+data/
 scratch/data/
 scratch/output/
 
-# PyCharm
-.idea/
-*.iml
+# Pre-publication material. This repository is public: the project's aims,
+# methodology and working records must not be pushed to it. These files stay
+# on disk and are deliberately untracked.
+CLAUDE.md
+CONTRIBUTIONS.md
