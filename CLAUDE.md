@@ -232,15 +232,27 @@ Sungyeon's framing is right: randomness is not the target, so a "random null" is
    
  scale.  
 **Status**  
-**Early scaffolding. No results yet.** Nothing here is publication-track.  
+**Phase 0 has first results (2026-09-07), on a single embedding model.**  
+   
+ The pipeline runs end to end on poetry and has produced findings -- see  
+   
+ `backlog/docs/phase0-first-results.md`. Nothing in them is established until  
+   
+ task-1 (the robustness check against `all-mpnet-base-v2`) repeats the  
+   
+ measurement. Phase 1 (arXiv) is untouched. Nothing here is publication-track.  
 | | |  
 |-|-|  
 | **Component** | **State** |   
 | src/1_collect_arxiv.py | Works. Hardcoded to math.AT, max_results=5000. Simpler than the scratch version. |   
 | src/2_clean_text.py | Works. A single function, not wired into anything. |   
-| src/3_embed_text.py | **Empty file** |   
-| src/4_build_complexes.py | **Empty file** |   
-| src/5_compute_ph.py | **Empty file** |   
+| src/3_embed_text.py | **Works (2026-09-07).** Embeds Phase 0 sample lines and the synthetic sweep through one pipeline. Drops wrap fragments first; writes embedding_manifest.parquet. |   
+| src/4_build_complexes.py | **Works (2026-09-07).** Decides which clouds are admissible and records their geometry; writes cloud_geometry.parquet. The complexes themselves are built inside ripser at step 5. |   
+| src/5_compute_ph.py | **Works (2026-09-07).** H0/H1 against corpus controls matched on *distinct* point count; writes ph_results.parquet. |   
+| src/embedding.py | **Works (2026-09-07).** Importable. Holds the model choice and enforces L2 normalisation and Nomic's `clustering: ` prefix so callers cannot get them wrong. |   
+| src/topology.py | **Works (2026-09-07).** Importable. Rips persistent homology plus the two controls, and counts exact duplicates from the cloud rather than the diagram. |   
+| src/synthetic.py | **Works (2026-09-07).** Importable. Builds synthetic villanelles by replanting refrains on the standard schedule, with refrain strength sweepable 1-4. |   
+| src/experiment_refrain_sensitivity.py | **Works (2026-09-07).** The displacement sweep -- paraphrase modelled as a small nudge of the refrain. Produced Phase 0's most useful result; writes refrain_sensitivity.parquet. See task-4. |   
 | src/collect_poetrydb_pilot.py | Superseded by collect_poetrydb_corpus.py. Kept for provenance of the 100-poem pilot. |   
 | src/collect_poetrydb_corpus.py | **Works (2026-09-07).** Full corpus, 3092 poems / 129 authors. Fetches per author, falls back to per-title when a bulk payload 503s (Byron 324 poems, Shelley 312), caches per author so a rerun is free. |   
 | src/poetry_forms.py | **Works (2026-09-07).** Mechanical form detection and stratified sampling. Importable, unlike the digit-prefixed scripts, so steps 3-5 can use it. |   
@@ -261,7 +273,7 @@ Both pilots, data/raw/, 100 rows each, saved as parquet **and** CSV:
    
  data/ is now gitignored: everything in it is reproducible from the two scripts  
    
- above, and the repository is public. Regenerate with `uv run python  
+ above and the corpus is ~71 MB. Regenerate with `uv run python  
    
  src/collect_poetrydb_corpus.py` then `uv run python src/poetry_forms.py`.  
 - data/raw/poetrydb_full.parquet - 3092 poems, 129 authors. 640 duplicate ids  
@@ -336,18 +348,34 @@ Form is recovered mechanically, with no hand-labelling, because PoetryDB's
    
  (it's only in the stale requirements.txt). The toy will not run in a clean  
  uv sync env without uv add nltk and the punkt_tab download.  
-- **Version control (corrected 2026-09-07):** topoling/ is its own git repo  
+- **Version control (corrected 2026-09-18):** topoling/ is its own git repo  
    
- with 10 commits and a **public** remote, github.com/YeoniH/topoling. The  
+ with a remote at github.com/YeoniH/topoling. That remote **was public and is  
    
- earlier note that it was untracked with zero commits was wrong. Because the  
+ now private**, changed on 2026-09-07. An earlier note here that it was  
    
- remote is public, data/, CLAUDE.md and CONTRIBUTIONS.md are gitignored:  
+ untracked with zero commits was wrong, and a later one that it was still  
    
- nothing pre-publication should be pushed there.  
-- **Already public:** scratch/toy_model.py was committed and pushed with a draft application abstract inline. It has been publicly readable since that commit. Removing it  
+ public was stale. Because it is private, CLAUDE.md, CONTRIBUTIONS.md and  
    
- from HEAD does not remove it from history.  
+ backlog/ are all tracked -- they are the least reproducible files here.  
+   
+ data/ stays ignored on size grounds, not secrecy. **If this repository is  
+   
+ ever made public again, exclude those files first, along with  
+   
+ scratch/toy_model.py.** Note that the repo is owned by the `YeoniH` GitHub  
+   
+ account, not `sungyeon-hong`; `gh` calls will 404 under the wrong one.  
+- **Was public, and history keeps it:** scratch/toy_model.py was committed and  
+   
+ pushed with a draft application abstract inline, during the period the remote was public.  
+   
+ Making the repository private on 2026-09-07 closes off future access but  
+   
+ does not undo that exposure, and removing the file from HEAD would not  
+   
+ remove it from history.  
 - **PoetryDB wraps long lines.** A long line of Whitman is stored broken across  
    
  entries, leaving indented continuation fragments like "  the" and "    of".  
@@ -365,10 +393,12 @@ Form is recovered mechanically, with no hand-labelling, because PoetryDB's
  class from 171 to 135, so 36 were pure artefact. Whitman is worst affected at  
    
  14.7% - relevant if he is ever used as a free-verse arm.  
-- **Resolved 2026-09-07:** data/ is now gitignored in full, along with  
- CLAUDE.md and CONTRIBUTIONS.md. The corpus is ~71 MB and reproducible from  
+- **Resolved 2026-09-14:** data/ is gitignored in full, because the corpus is  
+ ~71 MB and fully reproducible from the collectors. CLAUDE.md and  
    
- the collectors, so there is no reason to push it to a public remote.  
+ CONTRIBUTIONS.md were ignored alongside it while the remote was public;  
+   
+ they are tracked again now that it is private.  
 **Don't do this**  
 - Do not feed UMAP/t-SNE output into ripser (see Normalisation).  
 - Do not report document-level H1 for arXiv abstracts (~8 sentences — noise).  
