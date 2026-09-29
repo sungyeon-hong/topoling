@@ -21,4 +21,7 @@ scratch/output/
 # already tracked for the same reason.
 #
 # If this repository is ever made public again, exclude them first -- along
-# with scratch/toy_model.py, which carries the fellowship abstract inline.
+# with scratch/toy_model.py, which carries the fellowship abstract inline, and
+# backlog/, which since 2026-09-30 names a target venue (task-3, task-7). The full venue and
+# positioning material is deliberately NOT here: it lives in
+# outside any repository.

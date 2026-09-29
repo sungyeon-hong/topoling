@@ -2,9 +2,9 @@
 id: task-3
 title: Fill the three open items in CLAUDE.md
 status: To Do
-priority: medium
+priority: high
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-30
 labels: [documentation, sungyeon-only]
 depends_on: []
 ---
@@ -40,3 +40,16 @@ calibration, both for structural reasons. Those belong in the record.
 ## What counts as finished
 
 - [ ] All three `OPEN` markers in `CLAUDE.md` replaced with content.
+
+## Update 2026-09-30 — the second item is now half answered
+
+Sungyeon has named a concrete short-term output: **an abstract and preliminary results for a conference**, on the topological signature of explorative pathways in language, with
+poetry as the validation corpus. The venue and timeline are kept outside this repository, because they carry venue and positioning material.
+
+That raises this task's priority to high and makes the **falsifiable
+one-sentence claim the critical path**. It is the abstract's first sentence,
+and the figures and framing both follow from it. It cannot be deferred past
+October 2026 without compressing the whole schedule.
+
+The longer-horizon question — paper, thesis chapter or fellowship deliverable —
+is still open. A conference abstract is a milestone, not the destination.
