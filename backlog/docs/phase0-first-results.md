@@ -1,7 +1,13 @@
 # Phase 0, first results
 
-Run 2026-09-07. Single embedding model (`nomic-embed-text-v1.5`), so **nothing
-here is established** until task-1 repeats it with `all-mpnet-base-v2`.
+Run 2026-09-07. Single embedding model (`nomic-embed-text-v1.5`).
+
+> **Superseded in part, 2026-09-18.** task-1 has been done: see
+> `task-1-embedding-model-robustness.md`, which is now the authoritative
+> account. Most of what follows replicated under `all-mpnet-base-v2`, but
+> **Result 1 below did not and has been struck through** — it rested on a bug
+> in how the synthetic sweep was paired. Result 3's numbers reproduced exactly.
+> Read this document for the reasoning and the other for what is established.
 
 ## The short version
 
@@ -33,20 +39,38 @@ Every comparison below is therefore made against corpus controls matched on
 embedding model's geometry but none of the poem's coherence. The reported
 quantity is the poem's statistic minus the mean of 20 such controls.
 
-## Result 1 — matched on point count, refrain strength does almost nothing
+## Result 1 — WITHDRAWN 2026-09-18: refrain strength does nothing at all
 
-Synthetic villanelles, 30 donor poems, refrains planted on the standard
-schedule (lines 1/6/12/18 and 3/9/15/19), paired by donor so only the amount of
-repetition changes:
+**The table below is wrong and is kept only as a record.** It claimed the
+sweep was "paired by donor so only the amount of repetition changes". It was
+not. `synthetic.py` drew `rng.choice(donor_lines, size=n_needed)`, and
+`n_needed` falls from 19 to 13 as refrain strength rises, so each strength
+received a different random selection of the donor's lines. The sweep was
+paired at the donor-poem level only, and the weak H0 trend was partly a
+comparison between different sets of lines.
 
-| statistic | Spearman rho across strengths | endpoint test |
+~~Synthetic villanelles, 30 donor poems, refrains planted on the standard~~
+~~schedule (lines 1/6/12/18 and 3/9/15/19), paired by donor so only the amount~~
+~~of repetition changes:~~
+
+| ~~statistic~~ | ~~Spearman rho across strengths~~ | ~~endpoint test~~ |
 |---|---|---|
-| excess H0 mean bar life | +0.22 (p = 0.038) | p = 0.14, ns |
-| excess H1 count | +0.13 (p = 0.219) | p = 0.11, ns |
-| excess H1 total persistence | +0.06 (p = 0.580) | p = 0.48, ns |
+| ~~excess H0 mean bar life~~ | ~~+0.22 (p = 0.038)~~ | ~~p = 0.14, ns~~ |
+| ~~excess H1 count~~ | ~~+0.13 (p = 0.219)~~ | ~~p = 0.11, ns~~ |
+| ~~excess H1 total persistence~~ | ~~+0.06 (p = 0.580)~~ | ~~p = 0.48, ns~~ |
 
-A weak H0 trend, nothing in H1. As a positive control this is close to a
-failure — and the mechanism above explains why.
+Corrected, with the sweep genuinely paired (same refrains, same filler, only
+the repetition count differing), under both embedding models:
+
+| statistic | nomic rho (p) | mpnet rho (p) |
+|---|---|---|
+| excess H0 mean bar life | +0.040 (0.66) | +0.048 (0.60) |
+| excess H1 count | −0.009 (0.92) | +0.108 (0.24) |
+| excess H1 total persistence | −0.086 (0.35) | +0.106 (0.25) |
+
+Nothing anywhere, under either model. This **strengthens** the section above
+rather than weakening it: verbatim repetition is invisible to persistent
+homology, full stop, and the residual trend was an artifact.
 
 ## Result 2 — displaced refrains give a clean dose-response
 
@@ -67,7 +91,10 @@ whole sphere.
 
 H1 is flat across the entire range. It does not discriminate.
 
-**This is the useful finding.** It is a calibration curve: it says how close two
+**This is the useful finding, and it replicated under mpnet (task-1):**
+monotone, saturating by 0.20, curves correlating at rho = +0.943 — though the
+effect is five times smaller under mpnet, so the *size* is model-dependent even
+though the shape is not. It is a calibration curve: it says how close two
 lines must be before the instrument resolves them as related. And it points the
 right way for Phase 1, because a corpus converging on the semantic mean produces
 near-duplicates rather than copies — so the effect of interest should be *more*
@@ -87,10 +114,17 @@ paraphrase, not a linguistic one.
 | sonnet | 60 | 14.0 | −0.0595 |
 | irregular | 60 | 48.5 | −0.0579 |
 
-Kruskal–Wallis across the four arms: H = 21.92, p = 6.8 × 10⁻⁵.
+Kruskal–Wallis across the four arms: H = 21.92, p = 6.8 × 10⁻⁵. Re-running
+this on 2026-09-18 reproduced every figure in the table exactly, and mpnet gives
+H = 17.31, p = 6.1 × 10⁻⁴ (task-1).
 
 Pairwise (uncorrected): refrain_song vs irregular p < 10⁻⁴; refrain_song vs
 sonnet p = 0.0015; ballad vs irregular p = 0.0029. The rest are not significant.
+
+**task-1 caveat:** of these, only refrain_song vs irregular and ballad vs
+irregular survive under mpnet. refrain_song vs sonnet does not (p = 0.21), and
+sonnet vs irregular becomes significant under mpnet having been null here. Do
+not lean on any contrast but the first two.
 
 Every arm's excess is negative, meaning a real poem's lines sit closer together
 than a size-matched bag of arbitrary verse. That is the instrument detecting
@@ -125,5 +159,11 @@ about the method rather than about either dataset.
 
 ## What to do next
 
-task-1 (robustness check) gates everything. Then task-2 decides whether H1 and
-the "homogenisation loops" framing survive.
+**Done 2026-09-18:** task-1, the robustness check. See
+`task-1-embedding-model-robustness.md`. It also surfaced one H1 finding this
+document missed: real poems have far *fewer* loops than size-matched arbitrary
+verse, robustly under both models. H1 carries a coherence signal even though it
+carries no form-discriminating one, which is a different claim from "H1 shows
+nothing" and task-2 should weigh it.
+
+Next is task-2: whether H1 and the "homogenisation loops" framing survive.

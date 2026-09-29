@@ -13,11 +13,15 @@ topoling (topology + linguistics) applies **persistent homology to text**
    
  below is unfamiliar, then `backlog/docs/phase0-first-results.md` for what  
    
- is currently known, then the tasks in number order. **task-1 (robustness  
+ is currently known, then `backlog/docs/task-1-embedding-model-robustness.md`  
    
- check against a second embedding model) gates every Phase 0 finding** -  
+ for what survived a change of embedding model, then the tasks in number  
    
- nothing in the results is established until it is done.  
+ order. **task-1 is Done (2026-09-18) and no longer gates anything.** The  
+   
+ Phase 0 findings replicated under `all-mpnet-base-v2`, with the exceptions  
+   
+ recorded in that document. task-2 is now the open decision.  
 **Aim**  
 Generative AI is a "super-convergent" engine: it predicts the statistically  
    
@@ -116,11 +120,11 @@ Pipeline, as implied by the numbered scripts in src/:
  poetry_forms.py to label forms and draw the Phase 0 sample).  
 2. **Clean** — whitespace/LaTeX-quote normalisation only. Deliberately  
  *under*-cleans: mathematical terms must survive (2_clean_text.py).  
-3. **Embed** — see Method decisions.  **Not yet implemented.**  
-4. **Build complexes** — Vietoris–Rips over the point cloud.  **Not implemented.**  
-5. **Compute PH** — H0 (connectivity) and H1 (loops), then vectorise via  
+3. **Embed** — see Method decisions. **Implemented (3_embed_text.py, embedding.py).**  
+4. **Build complexes** — Vietoris–Rips over the point cloud. **Implemented (4_build_complexes.py); the complex itself is built inside ripser at step 5.**  
+5. **Compute PH** — H0 (connectivity) and H1 (loops). **Implemented (5_compute_ph.py, topology.py).** Vectorising via  
    
- persistence images for comparison. **Not implemented.**  
+ persistence images is **not implemented** and has not been needed yet.  
 **Method decisions**  
 **Unit of analysis — both, but they answer different questions**  
 - **Corpus-level** (one document = one point, corpus/year = the cloud) measures  
@@ -232,15 +236,15 @@ Sungyeon's framing is right: randomness is not the target, so a "random null" is
    
  scale.  
 **Status**  
-**Phase 0 has first results (2026-09-07), on a single embedding model.**  
+**Phase 0 results are replicated across two embedding models (2026-09-18).**  
    
  The pipeline runs end to end on poetry and has produced findings -- see  
    
- `backlog/docs/phase0-first-results.md`. Nothing in them is established until  
+ `backlog/docs/phase0-first-results.md` for the reasoning and  
    
- task-1 (the robustness check against `all-mpnet-base-v2`) repeats the  
+ `backlog/docs/task-1-embedding-model-robustness.md` for what is established.  
    
- measurement. Phase 1 (arXiv) is untouched. Nothing here is publication-track.  
+ Phase 1 (arXiv) is untouched. Nothing here is publication-track.  
 | | |  
 |-|-|  
 | **Component** | **State** |   
@@ -251,8 +255,9 @@ Sungyeon's framing is right: randomness is not the target, so a "random null" is
 | src/5_compute_ph.py | **Works (2026-09-07).** H0/H1 against corpus controls matched on *distinct* point count; writes ph_results.parquet. |   
 | src/embedding.py | **Works (2026-09-07).** Importable. Holds the model choice and enforces L2 normalisation and Nomic's `clustering: ` prefix so callers cannot get them wrong. |   
 | src/topology.py | **Works (2026-09-07).** Importable. Rips persistent homology plus the two controls, and counts exact duplicates from the cloud rather than the diagram. |   
-| src/synthetic.py | **Works (2026-09-07).** Importable. Builds synthetic villanelles by replanting refrains on the standard schedule, with refrain strength sweepable 1-4. |   
-| src/experiment_refrain_sensitivity.py | **Works (2026-09-07).** The displacement sweep -- paraphrase modelled as a small nudge of the refrain. Produced Phase 0's most useful result; writes refrain_sensitivity.parquet. See task-4. |   
+| src/synthetic.py | **Works.** Importable. Builds synthetic villanelles by replanting refrains on the standard schedule, with refrain strength sweepable 1-4. Pairing bug fixed 2026-09-18: it drew a fresh `rng.choice` per strength, and since the number of lines needed shrinks as repetition rises, every strength got different lines. Now draws a permutation once per donor. |   
+| src/experiment_refrain_sensitivity.py | **Works.** The displacement sweep -- paraphrase modelled as a small nudge of the refrain. Produced Phase 0's most useful result. Seeding bug fixed 2026-09-18: it used Python's `hash()`, which is randomised per process, so the sweep was not reproducible between runs. See task-4. |   
+| src/compare_models.py | **Works (2026-09-18).** Runs task-1's cross-model comparison over the model-tagged outputs. Compares shapes, never absolute values. |   
 | src/collect_poetrydb_pilot.py | Superseded by collect_poetrydb_corpus.py. Kept for provenance of the 100-poem pilot. |   
 | src/collect_poetrydb_corpus.py | **Works (2026-09-07).** Full corpus, 3092 poems / 129 authors. Fetches per author, falls back to per-title when a bulk payload 503s (Byron 324 poems, Shelley 312), caches per author so a rerun is free. |   
 | src/poetry_forms.py | **Works (2026-09-07).** Mechanical form detection and stratified sampling. Importable, unlike the digit-prefixed scripts, so steps 3-5 can use it. |   
@@ -330,6 +335,15 @@ Form is recovered mechanically, with no hand-labelling, because PoetryDB's
  modules; they are scripts only. Shared logic must move to a normal module name  
    
  if steps 3–5 need to import it.  
+- **Every pipeline stage takes ** **--model {nomic,mpnet}** and writes to a  
+   
+ model-tagged path (`ph_results_nomic.parquet`, `ph_results_mpnet.parquet`,  
+   
+ ...), so the primary and robustness runs cannot overwrite each other. Both  
+   
+ models see byte-identical text: every draw upstream of the embedding is  
+   
+ seeded. Compare them with `uv run python src/compare_models.py`.  
 - **arXiv API courtesy:** the collectors already use delay_seconds 3–5 and  
    
  retries. Do not lower these or parallelise the harvest.  
@@ -422,14 +436,33 @@ Form is recovered mechanically, with no hand-labelling, because PoetryDB's
    
  between unrelated verse lines is ~0.80). This is good news for Phase 1:  
    
- homogenisation produces near-duplicates, not copies.  
-- Do not assume H1 carries the signal. In the first Phase 0 run H1 showed  
+ homogenisation produces near-duplicates, not copies. Replicated under mpnet  
    
- nothing anywhere - not across refrain strength, not across displacement at  
+ (2026-09-18): same shape, same saturation point, but the effect is five  
    
- matched cardinality, not between form arms. H0 carried everything. The  
+ times smaller. **Never quote an effect size from one model as the  
    
- "homogenisation loops" framing is not yet supported by evidence.  
+ instrument's sensitivity** - shape replicates, magnitude does not.  
+- Do not assume H1 discriminates (confirmed across two models, 2026-09-18).  
+   
+ H1 moves with nothing: not refrain strength, not displacement at matched  
+   
+ cardinality, not form arm. The two H1 arm results that looked significant  
+   
+ flip in *opposite* directions between Nomic and mpnet, and a third is just  
+   
+ point count (rho = +0.92 with distinct-point count). H0 carries the  
+   
+ discriminating signal. The "homogenisation loops" framing is not supported.  
+- **But H1 is not empty.** Real poems have far *fewer* loops than a  
+   
+ size-matched bag of arbitrary verse -- mean excess -25.2 (nomic) and -18.5  
+   
+ (mpnet), both p < 10^-16. H1 carries a **coherence** signal but not a  
+   
+ **form-discriminating** one. Those are different claims and task-2 turns on  
+   
+ which one is made.  
 - Do not use a shuffled-line control with plain Rips. A Rips complex is built  
    
  from a *set* of points and is permutation-invariant, so shuffling changes no  
