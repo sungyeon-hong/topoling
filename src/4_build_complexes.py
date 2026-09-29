@@ -8,9 +8,11 @@ Because every point is L2-normalised, all pairwise distances fall in [0, 2]
 and are monotone in cosine similarity. The geometry columns below therefore
 mean the same thing across every poem, with no rescaling.
 
-Run from the project root:  uv run python src/4_build_complexes.py
+Run from the project root:
+    uv run python src/4_build_complexes.py --model nomic
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -19,6 +21,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 
 sys.path.insert(0, str(Path(__file__).parent))
+from embedding import add_model_arg, tagged                 # noqa: E402
 from poetry_forms import H1_POINT_FLOOR                    # noqa: E402
 from topology import count_duplicates                      # noqa: E402
 
@@ -28,9 +31,12 @@ MANIFEST = PROCESSED / "embedding_manifest.parquet"
 OUT = PROCESSED / "cloud_geometry.parquet"
 
 
-def main():
-    clouds = np.load(EMB)
-    manifest = pd.read_parquet(MANIFEST)
+def main(model_key: str):
+    emb, manifest_path = tagged(EMB, model_key), tagged(MANIFEST, model_key)
+    out = tagged(OUT, model_key)
+
+    clouds = np.load(emb)
+    manifest = pd.read_parquet(manifest_path)
 
     rows = []
     for rec in manifest.itertuples():
@@ -50,9 +56,9 @@ def main():
         })
 
     geom = manifest.merge(pd.DataFrame(rows), on="poem_id")
-    geom.to_parquet(OUT, index=False)
+    geom.to_parquet(out, index=False)
 
-    print(f"Assembled {len(geom)} clouds; every distance in "
+    print(f"[{model_key}] assembled {len(geom)} clouds; every distance in "
           f"[{geom.d_min.min():.3f}, {geom.d_max.max():.3f}] of the possible [0, 2]\n")
     print(geom.groupby("form_family").agg(
         n=("poem_id", "size"),
@@ -65,7 +71,10 @@ def main():
     print(f"\nH1 floor applied to *distinct* points (>= {H1_POINT_FLOOR}): "
           "repeated lines collapse to one point, so raw line count overstates "
           "what Rips sees.")
+    print(f"\nWritten to {out}")
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    add_model_arg(ap)
+    main(ap.parse_args().model)

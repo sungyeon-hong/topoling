@@ -19,9 +19,11 @@ instrument's resolving power, which is what Phase 1 needs, and makes no claim
 about what a real paraphrase does.
 
 Run from the project root:
-    uv run python src/experiment_refrain_sensitivity.py
+    uv run python src/experiment_refrain_sensitivity.py --model nomic
 """
 
+import argparse
+import hashlib
 import sys
 from pathlib import Path
 
@@ -31,17 +33,35 @@ from scipy import stats
 from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).parent))
-from embedding import l2_normalise                          # noqa: E402
+from embedding import add_model_arg, l2_normalise, tagged   # noqa: E402
 from synthetic import A1_POSITIONS, A2_POSITIONS, VILLANELLE_LENGTH  # noqa: E402
 from topology import analyse, corpus_control                # noqa: E402
 
 PROCESSED = Path("data/processed")
+EMB = PROCESSED / "embeddings.npz"
+GEOM = PROCESSED / "cloud_geometry.parquet"
 OUT = PROCESSED / "refrain_sensitivity.parquet"
+
+SEED = 0
 
 # 0.0 is verbatim repetition; the median distance between unrelated verse
 # lines is ~0.80, so 0.4 is already half-way to "unrelated".
 EPSILONS = [0.0, 0.02, 0.05, 0.10, 0.20, 0.40]
 N_CONTROLS = 20
+
+
+def donor_seed(donor: str) -> int:
+    """A stable seed for one donor, identical in every process and every run.
+
+    Python's built-in `hash()` is randomised per process for str, so seeding
+    from it gave a different displacement on every run and made the sweep
+    irreproducible. That does not matter much within one run, but it is fatal
+    to task-1: the primary and robustness runs would draw different
+    displacements, and a difference between the two models could not be told
+    apart from a difference between two random draws. blake2b is stable.
+    """
+    digest = hashlib.blake2b(donor.encode(), digest_size=8).digest()
+    return int.from_bytes(digest, "big") % (1 << 30)
 
 
 def build_cloud(donor_cloud: np.ndarray, eps: float, rng) -> np.ndarray:
@@ -62,26 +82,28 @@ def build_cloud(donor_cloud: np.ndarray, eps: float, rng) -> np.ndarray:
     return l2_normalise(cloud)
 
 
-def main():
-    clouds = np.load(PROCESSED / "embeddings.npz")
-    geom = pd.read_parquet(PROCESSED / "cloud_geometry.parquet")
+def main(model_key: str):
+    out = tagged(OUT, model_key)
+    clouds = np.load(tagged(EMB, model_key))
+    geom = pd.read_parquet(tagged(GEOM, model_key))
 
     donors = geom[(~geom.is_synthetic) & (geom.n_distinct_points >= 19)].poem_id
     pool = np.vstack([clouds[i] for i in geom.loc[~geom.is_synthetic, "poem_id"]])
     print(f"{len(donors)} donor poems, control pool {len(pool)} lines\n")
 
-    rng = np.random.default_rng(0)
+    rng = np.random.default_rng(SEED)
     rows = []
     for donor in tqdm(list(donors), desc="sensitivity sweep"):
         dc = clouds[donor]
         for eps in EPSILONS:
-            cloud = build_cloud(dc, eps, np.random.default_rng(abs(hash(donor)) % (1 << 30)))
+            cloud = build_cloud(dc, eps, np.random.default_rng(donor_seed(donor)))
             uniq = np.unique(np.round(cloud, 9), axis=0)
             obs = analyse(uniq)
             ctrl = pd.DataFrame([analyse(corpus_control(pool, len(uniq), rng))
                                  for _ in range(N_CONTROLS)])
             rows.append({
-                "donor": donor, "eps": eps, "n_distinct": len(uniq),
+                "donor": donor, "model_key": model_key,
+                "eps": eps, "n_distinct": len(uniq),
                 "h0_mean_life": obs["h0_mean_life_nondup"],
                 "h0_mean_life_excess": obs["h0_mean_life_nondup"] - ctrl["h0_mean_life_nondup"].mean(),
                 "n_h1": obs["n_h1"],
@@ -91,10 +113,10 @@ def main():
             })
 
     df = pd.DataFrame(rows)
-    df.to_parquet(OUT, index=False)
+    df.to_parquet(out, index=False)
 
     pd.set_option("display.width", 200)
-    print("\n=== refrain displacement sweep (eps = 0 is verbatim repetition) ===\n")
+    print(f"\n=== [{model_key}] refrain displacement sweep (eps = 0 is verbatim) ===\n")
     print(df.groupby("eps").agg(
         n=("donor", "size"),
         distinct_pts=("n_distinct", "median"),
@@ -116,6 +138,10 @@ def main():
             flag = "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else "ns"
             print(f"  eps={eps:<5} {stat:22} diff {(b-a).mean():+.4f}  p={p:.4f} {flag}")
 
+    print(f"\nWritten to {out}")
+
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    add_model_arg(ap)
+    main(ap.parse_args().model)

@@ -5,9 +5,15 @@ both pass through an identical pipeline. Wrap fragments are dropped first:
 PoetryDB breaks long lines, and an indented remnant like "  the" is not a line
 of verse and must not become a point (see poetry_forms.py).
 
-Run from the project root:  uv run python src/3_embed_text.py
+Outputs are tagged with the model key, so the primary run and the robustness
+run (task-1) survive side by side.
+
+Run from the project root:
+    uv run python src/3_embed_text.py --model nomic
+    uv run python src/3_embed_text.py --model mpnet
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -16,7 +22,7 @@ import pandas as pd
 from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).parent))
-from embedding import PRIMARY_MODEL, embed_lines          # noqa: E402
+from embedding import add_model_arg, embed_lines, resolve_model, tagged  # noqa: E402
 from poetry_forms import is_wrap_fragment                  # noqa: E402
 from synthetic import build_sweep                          # noqa: E402
 
@@ -25,6 +31,10 @@ SAMPLE = PROCESSED / "poetry_phase0_sample.parquet"
 LABELLED = PROCESSED / "poetrydb_labelled.parquet"
 OUT = PROCESSED / "embeddings.npz"
 MANIFEST = PROCESSED / "embedding_manifest.parquet"
+
+# The donor draw, the synthetic sweep and the sample are all seeded, so the two
+# models see byte-identical text. Only the embedding differs.
+SEED = 0
 
 # Donors for the synthetic sweep: poems with no refrains of their own, long
 # enough to supply 19 distinct lines, so any repetition is the one we planted.
@@ -37,7 +47,10 @@ def verse_lines(lines) -> list[str]:
     return [l.strip() for l in lines if l.strip() and not is_wrap_fragment(l)]
 
 
-def main():
+def main(model_key: str):
+    model_name = resolve_model(model_key)
+    out, manifest_path = tagged(OUT, model_key), tagged(MANIFEST, model_key)
+
     sample = pd.read_parquet(SAMPLE)
     labelled = pd.read_parquet(LABELLED)
 
@@ -45,7 +58,7 @@ def main():
         (labelled.n_refrains == 0)
         & (labelled.linecount >= MIN_DONOR_LINES)
         & (labelled.wrap_fraction == 0)
-    ].sample(n=N_DONORS, random_state=0)
+    ].sample(n=N_DONORS, random_state=SEED)
     donors = []
     for lines in donors_df.lines:
         uniq = list(dict.fromkeys(verse_lines(lines)))
@@ -57,27 +70,31 @@ def main():
     real = [{"poem_id": r.poem_id, "title": r.title, "author": r.author,
              "form": r.form, "form_family": r.form_family, "n_repeats": 0,
              "lines": list(r.lines)} for r in sample.itertuples()]
-    synthetic = build_sweep(donors, seed=0)
+    synthetic = build_sweep(donors, seed=SEED)
     print(f"{len(real)} real poems + {len(synthetic)} synthetic poems")
 
     for rec in tqdm(real + synthetic, desc="embedding"):
         lines = verse_lines(rec["lines"])
         if len(lines) < 4:            # too small for any complex worth building
             continue
-        clouds[rec["poem_id"]] = embed_lines(lines)
+        clouds[rec["poem_id"]] = embed_lines(lines, model_name=model_name)
         records.append({k: v for k, v in rec.items() if k != "lines"}
                        | {"n_lines_embedded": len(lines),
-                          "is_synthetic": rec["author"] == "SYNTHETIC"})
+                          "is_synthetic": rec["author"] == "SYNTHETIC",
+                          "model_key": model_key, "model_name": model_name})
 
-    np.savez_compressed(OUT, **clouds)
+    np.savez_compressed(out, **clouds)
     manifest = pd.DataFrame(records)
-    manifest.to_parquet(MANIFEST, index=False)
+    manifest.to_parquet(manifest_path, index=False)
 
-    print(f"\nEmbedded {len(clouds)} poems with {PRIMARY_MODEL}")
-    print(f"  {OUT}  ({OUT.stat().st_size / 1e6:.0f} MB)")
+    print(f"\nEmbedded {len(clouds)} poems with {model_name}")
+    print(f"  {out}  ({out.stat().st_size / 1e6:.0f} MB)")
+    print(f"  {manifest_path}")
     print(manifest.groupby("form_family").n_lines_embedded.agg(
         ["size", "median"]).to_string())
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    add_model_arg(ap)
+    main(ap.parse_args().model)

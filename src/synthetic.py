@@ -53,8 +53,14 @@ def make_villanelle(donor_lines: list[str], n_repeats: int, rng) -> list[str]:
     if len(donor_lines) < n_needed:
         raise ValueError(f"donor has {len(donor_lines)} lines, needs {n_needed}")
 
-    chosen = list(rng.choice(donor_lines, size=n_needed, replace=False))
-    a1, a2, *filler = chosen
+    # Draw a permutation rather than a size-`n_needed` sample. Both are random
+    # draws without replacement, but `rng.choice(size=n)` returns a different
+    # set for every n, whereas a permutation is the same ordering whatever is
+    # taken from it. Since n_needed shrinks as n_repeats grows (19 -> 13), only
+    # the permutation keeps the two refrains and the filler fixed across the
+    # sweep -- which is what makes the sweep paired.
+    perm = list(rng.permutation(np.asarray(donor_lines, dtype=object)))
+    a1, a2, *filler = perm[:n_needed]
 
     poem = [None] * VILLANELLE_LENGTH
     for i in a1_slots:
@@ -73,15 +79,18 @@ def build_sweep(donor_poems: list[list[str]], seed: int = 0) -> list[dict]:
     between n_repeats=1 and n_repeats=4 is the amount of verbatim repetition,
     so any change in the diagrams is attributable to that alone.
     """
-    rng = np.random.default_rng(seed)
     records = []
     for donor_idx, donor in enumerate(donor_poems):
-        # Same draw for every strength: the refrains and filler are identical,
-        # only the number of repetitions differs.
-        donor_rng = np.random.default_rng(seed + donor_idx)
+        # The pairing is the point of the sweep, so every strength must be
+        # handed the *same* generator state: a fresh default_rng(seed +
+        # donor_idx) per strength draws the same refrains and the same filler,
+        # and only the number of repetitions differs. Advancing one shared
+        # generator across the strengths instead would reseed each draw and
+        # silently change which lines were chosen, which is what this did until
+        # 2026-09-18 -- the sweep was then paired only at the donor-poem level.
         for n_repeats in range(1, MAX_REPEATS + 1):
             lines = make_villanelle(donor, n_repeats,
-                                    np.random.default_rng(donor_rng.integers(1 << 30)))
+                                    np.random.default_rng(seed + donor_idx))
             records.append({
                 "poem_id": f"synth_{donor_idx:03d}_r{n_repeats}",
                 "title": f"synthetic villanelle (donor {donor_idx}, {n_repeats} repeats)",

@@ -21,6 +21,8 @@ recorded alongside the vectors. Getting this wrong silently distorts every
 distance downstream.
 """
 
+from pathlib import Path
+
 import numpy as np
 
 PRIMARY_MODEL = "nomic-ai/nomic-embed-text-v1.5"
@@ -28,6 +30,32 @@ ROBUSTNESS_MODEL = "sentence-transformers/all-mpnet-base-v2"
 
 # Only Nomic takes a task prefix; mpnet must not be given one.
 TASK_PREFIX = {PRIMARY_MODEL: "clustering: "}
+
+# Short keys for the command line and for tagging output files. Every stage of
+# the pipeline writes to a model-tagged path, so the primary run and the
+# robustness run survive side by side and neither can silently overwrite the
+# other (task-1).
+MODEL_KEYS = {"nomic": PRIMARY_MODEL, "mpnet": ROBUSTNESS_MODEL}
+
+
+def resolve_model(key: str) -> str:
+    """Full model name for a short key such as "nomic" or "mpnet"."""
+    if key not in MODEL_KEYS:
+        raise ValueError(f"unknown model key {key!r}; expected one of "
+                         f"{sorted(MODEL_KEYS)}")
+    return MODEL_KEYS[key]
+
+
+def tagged(path: Path, key: str) -> Path:
+    """Insert a model key before the suffix: foo.parquet -> foo_nomic.parquet."""
+    return path.with_name(f"{path.stem}_{key}{path.suffix}")
+
+
+def add_model_arg(parser) -> None:
+    """Give a script the standard --model flag."""
+    parser.add_argument("--model", choices=sorted(MODEL_KEYS), default="nomic",
+                        help="embedding model to run (default: nomic)")
+
 
 _MODEL_CACHE = {}
 
