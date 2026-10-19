@@ -157,6 +157,11 @@ discriminate.**
 
 ## Result 5 — the one robust H1 finding, previously understated
 
+> **Correction, 2026-10-19 (task-2):** the mean excess figures below are
+> dragged by a few long poems. The typical effect is about 15% fewer loops
+> (median ratio to controls 0.85 nomic, 0.86 mpnet). Quote the ratio. See
+> `task-2-h1-decision.md`.
+
 Real poems have dramatically *fewer* loops than a size-matched bag of arbitrary
 verse: mean excess H1 count −25.2 under Nomic and −18.5 under mpnet, both
 p < 10⁻¹⁶.

@@ -21,7 +21,7 @@ topoling (topology + linguistics) applies **persistent homology to text**
    
  Phase 0 findings replicated under `all-mpnet-base-v2`, with the exceptions  
    
- recorded in that document. task-2 is now the open decision.  
+ recorded in that document. **task-2 is Done (2026-10-19)** -- see `backlog/docs/task-2-h1-decision.md`. task-3 is now the open item.  
 **Aim**  
 Generative AI is a "super-convergent" engine: it predicts the statistically  
    
@@ -34,15 +34,28 @@ Generative AI is a "super-convergent" engine: it predicts the statistically
  agency (Ferdman, 2025). There is currently no established methodology to quantify  
    
  this systemic thinning of ideas.  
-This project builds that diagnostic. It treats a document (or a corpus) as a  
-   
- **point cloud in semantic space** and uses persistent homology (Carlsson, 2009)  
-   
- to track connectivity, loops, and higher-order structure across scales — looking  
-   
- for signatures that surface statistics cannot detect, such as "homogenisation  
-   
- loops" and the loss of conceptual frontiers.  
+This project builds that diagnostic. It treats a document (or a corpus) as a
+**point cloud in semantic space** and uses persistent homology (Carlsson, 2009)
+to track connectivity (H0) and loops (H1) across scales, looking for signatures
+that surface statistics cannot detect.
+
+**What each phase claims (decided 2026-10-19, task-2; see
+`backlog/docs/task-2-h1-decision.md`).**
+
+- **Phase 1, arXiv, corpus level: homogenisation is the motivation here.**
+  Whether "homogenisation loops" and the loss of conceptual frontiers show up as
+  corpus-level H1 is an **open question**, not a finding. Write the prediction
+  down before task-6 or task-7 produces numbers.
+- **Phase 0, poetry, document level: no homogenisation claim.** Sungyeon's
+  motivation for poetry is to see whether novel or unusual expression shows
+  identifiable patterns under topological analysis. H0 is the headline
+  measurement. H1 is reported as a supporting coherence measure: real poems
+  have about 15% fewer loops than size-matched controls, which fits Sungyeon's
+  reading that poems are short and leaner in structure than usual texts. It
+  does not discriminate form.
+- **Sliding-window persistence** (the only construction that sees line order)
+  is future work, outside the conference timeline.
+
 **"Structural openness" means** a shift toward different styles and different  
    
  formulations of ideas, as opposed to "following the crowd". It is *not* a claim  
@@ -62,7 +75,7 @@ This project builds that diagnostic. It treats a document (or a corpus) as a
    
  pins leaked into this project's requirements.txt (see Gotchas).  
 **Phasing**  
-**Poetry comes first, and it is instrument validation — not a comparison arm.**  
+**Poetry comes first, and it is instrument validation — not a comparison arm.** *(2026-10-19: Sungyeon's stated motivation now goes further -- whether novel or unusual expression shows identifiable topological patterns; see Aim. The current arms test form, not novelty; closing that gap belongs to task-3.)*  
 - **Phase 0 (current): poetry.** Establish that persistent homology detects  
    
  known structural signatures in human writing at all, using PoetryDB. Poetry is  
@@ -453,16 +466,14 @@ Form is recovered mechanically, with no hand-labelling, because PoetryDB's
    
  point count (rho = +0.92 with distinct-point count). H0 carries the  
    
- discriminating signal. The "homogenisation loops" framing is not supported.  
-- **But H1 is not empty.** Real poems have far *fewer* loops than a  
-   
- size-matched bag of arbitrary verse -- mean excess -25.2 (nomic) and -18.5  
-   
- (mpnet), both p < 10^-16. H1 carries a **coherence** signal but not a  
-   
- **form-discriminating** one. Those are different claims and task-2 turns on  
-   
- which one is made.  
+ discriminating signal. The "homogenisation loops" framing is not supported at document level; it stays open for corpus-level arXiv work (task-2).  
+- **But H1 is not empty.** Real poems have *fewer* loops than a size-matched
+  bag of arbitrary verse: median ratio 0.85 (nomic) and 0.86 (mpnet), 75% of
+  poems below their controls, both p < 10^-15. **Quote the ratio, not the mean
+  excess** -- the -25.2 / -18.5 mean excess in task-1 is dragged by a few long
+  poems. H1 carries a **coherence** signal, partly overlapping H0 (rho ~0.6),
+  but no form information beyond H0. Settled in task-2.
+
 - Do not use a shuffled-line control with plain Rips. A Rips complex is built  
    
  from a *set* of points and is permutation-invariant, so shuffling changes no  
