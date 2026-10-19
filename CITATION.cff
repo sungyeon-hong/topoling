@@ -5,6 +5,7 @@ type: software
 authors:
   - family-names: Hong
     given-names: Sungyeon
+    orcid: "https://orcid.org/0000-0002-9897-1205"
     affiliation: Australian National University
 repository-code: "https://github.com/sungyeon-hong/topoling"
 license:
