@@ -1,0 +1,8 @@
+#!/bin/sh
+# Check only the lines this commit adds.
+TMP=$(mktemp)
+git diff --cached -U0 --no-color | grep '^+' | grep -v '^+++' > "$TMP"
+sh "$(dirname "$0")/check-blocklist.sh" "$TMP" "commit's changes"
+STATUS=$?
+rm -f "$TMP"
+exit $STATUS

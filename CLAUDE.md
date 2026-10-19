@@ -66,7 +66,8 @@ the claim is about semantic spread and bridging, because sentence embeddings
 may not represent metaphor as metaphor. Testing it needs a prose comparison
 corpus: task-8.
 
-**Intended output:** a conference abstract in the short term (plan kept outside the repository). The longer-horizon output (paper, thesis chapter
+**Intended output:** a conference abstract in the short term (venue and plan
+kept outside the repository). The longer-horizon output (paper, thesis chapter
 or fellowship deliverable) is still OPEN.
 
 ## Relationship to other projects
@@ -75,9 +76,9 @@ or fellowship deliverable) is still OPEN.
   frame, but studies *recursive model-to-model* trajectories. topoling studies
   *human-authored corpora over historical time*. Keep method vocabulary and
   embedding-model choices aligned so results are comparable across the two.
-- **geometry-driven-hyperuniformity** — methodologically unrelated, but
-  scratch/toy_model.py uses its abstract as abstract_2, and its dependency pins
-  leaked into this project's requirements.txt (see Gotchas).
+- **geometry-driven-hyperuniformity** — methodologically unrelated. An early
+  proof-of-concept script borrowed text and dependency pins from it; neither was
+  carried into this public repository.
 
 ## Phasing
 
@@ -161,7 +162,8 @@ paper texts rather than abstracts.
 
 ### Embedding model — switch off SPECTER2 for sentence-level work
 
-scratch/toy_model.py uses allenai/specter2_base and takes the CLS token per
+The original proof of concept (an early scratch script, not carried into this
+public repository) used allenai/specter2_base and took the CLS token per
 sentence. This is off-label: SPECTER2 is trained for *document-level* citation
 similarity on title+abstract pairs, and the CLS vector of an encoder not tuned
 for sentence similarity is a weak sentence representation. It is also
@@ -246,7 +248,6 @@ Phase 1 (arXiv) is untouched. Nothing here is publication-track.
 | src/collect_poetrydb_corpus.py | **Works (2026-09-07).** Full corpus, 3092 poems / 129 authors. Fetches per author, falls back to per-title when a bulk payload 503s (Byron 324 poems, Shelley 312), caches per author so a rerun is free. |
 | src/poetry_forms.py | **Works (2026-09-07).** Mechanical form detection and stratified sampling. Importable, unlike the digit-prefixed scripts, so steps 3-5 can use it. |
 | scratch/collect_arxiv_pilot.py | Works, and is the *better* collector — version stripping, dedup, 21-column schema, run summary. |
-| scratch/toy_model.py | End-to-end proof of concept on two hand-pasted abstracts. Writes PNGs to CWD. |
 | main.py | uv init boilerplate. Not an entry point. |
 | notebooks/poetry_db.md | Notes on three poetry corpus options (PoetryDB / Gutendex / Gutenberg Poetry Corpus). No notebooks yet. |
 
@@ -312,32 +313,26 @@ Sonnets 18, Barrett Browning 18).
 
 ## Gotchas
 
-- **requirements.txt is stale and foreign — ignore it.** It pins parsnip-cif,
-  rowan, and a full CUDA/torch stack that belong to
-  geometry-driven-hyperuniformity, and its versions conflict with pyproject.toml
-  (e.g. gudhi 3.11 vs >=3.12, ripser 0.6.14 vs >=0.6.15). Either delete it or
-  regenerate with uv export.
+- **There is no requirements.txt, deliberately.** The one that existed pinned
+  another project's dependencies and was removed on 2026-10-19.
+  pyproject.toml and uv.lock are authoritative.
 - **Declared but unused so far:** gudhi, duckdb, umap-learn, persim,
   scikit-learn. Their presence signals intent, not existing code — don't assume
   a UMAP step or a DuckDB store exists.
-- **nltk is used in scratch/toy_model.py but is not in pyproject.toml** (it's
-  only in the stale requirements.txt). The toy will not run in a clean uv sync
-  env without uv add nltk and the punkt_tab download.
-- **Version control (corrected 2026-09-18):** topoling/ is its own git repo with
-  a remote at github.com/YeoniH/topoling. That remote **was public and is now
-  private**, changed on 2026-09-07. An earlier note here that it was untracked
-  with zero commits was wrong, and a later one that it was still public was
-  stale. Because it is private, CLAUDE.md, CONTRIBUTIONS.md and backlog/ are all
-  tracked -- they are the least reproducible files here. data/ stays ignored on
-  size grounds, not secrecy. **If this repository is ever made public again,
-  exclude those files first, along with scratch/toy_model.py.** Note that the
-  repo is owned by the `YeoniH` GitHub account, not `sungyeon-hong`; `gh` calls
-  will 404 under the wrong one.
-- **Was public, and history keeps it:** scratch/toy_model.py was committed and
-  pushed with a draft application abstract inline, during the period the remote was public.
-  Making the repository private on 2026-09-07 closes off future access but does
-  not undo that exposure, and removing the file from HEAD would not remove it
-  from history.
+- **This repository is public (2026-10-19)**, at
+  github.com/sungyeon-hong/topoling, so the research trajectory can be traced.
+  It was created from an earlier private repository, kept unedited as an
+  archive, with its history cleaned: a scratch script carrying an unpublished
+  application abstract and a foreign requirements.txt were removed from every
+  commit, venue-specific wording was neutralised, and authorship was normalised
+  to `sungyeon-hong`. Commit dates and messages are otherwise unchanged.
+  CLAUDE.md, CONTRIBUTIONS.md and backlog/ are tracked as the least
+  reproducible files here; data/ stays ignored on size grounds.
+- **Venue names, submission dates and publication plans never go in this
+  repository.** They are kept outside it. Here, write "the
+  target venue" or "the conference abstract". `.githooks/pre-commit` refuses a
+  commit whose staged changes match a blocklist kept outside the repository; enable it once per clone
+  with `git config core.hooksPath .githooks`.
 - **PoetryDB wraps long lines.** A long line of Whitman is stored broken across
   entries, leaving indented continuation fragments like " the" and " of". These
   are not lines of verse and they bite twice: they register as repeated refrains
@@ -348,9 +343,7 @@ Sonnets 18, Barrett Browning 18).
   171 to 135, so 36 were pure artefact. Whitman is worst affected at 14.7% -
   relevant if he is ever used as a free-verse arm.
 - **Resolved 2026-09-14:** data/ is gitignored in full, because the corpus is
-  ~71 MB and fully reproducible from the collectors. CLAUDE.md and
-  CONTRIBUTIONS.md were ignored alongside it while the remote was public; they
-  are tracked again now that it is private.
+  ~71 MB and fully reproducible from the collectors.
 
 ## Don't do this
 
