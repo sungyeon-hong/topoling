@@ -14,8 +14,3 @@ __pycache__/
 data/
 scratch/data/
 scratch/output/
-
-# This repository is public. Venue names, submission dates and publication
-# plans are never committed here.
-# .githooks/pre-commit checks staged changes against a private blocklist kept
-# there. Enable it once per clone: git config core.hooksPath .githooks

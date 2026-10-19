@@ -44,7 +44,8 @@ calibration, both for structural reasons. Those belong in the record.
 ## Update 2026-09-30 — the second item is now half answered
 
 Sungyeon has named a concrete short-term output: **an abstract and preliminary results for a conference**, on the topological signature of explorative pathways in language, with
-poetry as the validation corpus. The venue and timeline are kept outside this repository, because they carry venue and positioning material.
+poetry as the validation corpus. The venue and timeline are kept outside this repository, because they carry
+venue and positioning material.
 
 That raises this task's priority to high and makes the **falsifiable
 one-sentence claim the critical path**. It is the abstract's first sentence,

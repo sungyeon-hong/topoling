@@ -317,10 +317,11 @@ Sonnets 18, Barrett Browning 18).
   CLAUDE.md, CONTRIBUTIONS.md and backlog/ are tracked as the least
   reproducible files here; data/ stays ignored on size grounds.
 - **Venue names, submission dates and publication plans never go in this
-  repository.** They are kept outside it. Here, write "the
-  target venue" or "the conference abstract". `.githooks/pre-commit` refuses a
-  commit whose staged changes match a blocklist kept outside the repository; enable it once per clone
-  with `git config core.hooksPath .githooks`.
+  repository.** They are kept outside it. Here, write "the target venue" or "the
+  conference abstract". `.githooks/` refuses a commit whose staged changes or
+  message match a blocklist kept outside the repository. Enable it once per
+  clone with `git config core.hooksPath .githooks` and
+  `git config topoling.blocklist <path to the list>`.
 - **PoetryDB wraps long lines.** A long line of Whitman is stored broken across
   entries, leaving indented continuation fragments like " the" and " of". These
   are not lines of verse and they bite twice: they register as repeated refrains
