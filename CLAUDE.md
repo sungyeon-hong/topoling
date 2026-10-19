@@ -16,7 +16,7 @@ survived a change of embedding model, then the tasks in number order. **task-1
 is Done (2026-09-18) and no longer gates anything.** The Phase 0 findings
 replicated under `all-mpnet-base-v2`, with the exceptions recorded in that
 document. **task-2 is Done (2026-10-19)** -- see
-`backlog/docs/task-2-h1-decision.md`. task-3 is now the open item.
+`backlog/docs/task-2-h1-decision.md`. task-3's claim is recorded (2026-10-19); task-8, the prose comparison corpus, now gates it.
 
 ## Aim
 
@@ -54,9 +54,20 @@ Decided 2026-10-19 in task-2; see `backlog/docs/task-2-h1-decision.md`.
 formulations of ideas, as opposed to "following the crowd". It is *not* a claim
 about randomness — a maximally random corpus is not the ideal. See Baselines.
 
-**Testable claim:** OPEN — the falsifiable one-sentence version.
+**Testable claim (Sungyeon, 2026-10-19; task-3):** compared with prose by the
+same authors, cut into segments of the same length, a poem's lines spread more
+widely across semantic space yet stay linked to one another, giving longer H0
+bars than prose but shorter than an unordered bag of lines. **It is false if**
+poems' H0 bars are no longer than the matched prose under both embedding
+models. Sungyeon's reasoning: a poem is written differently from an ordinary
+description, with more metaphors and novel links connecting seemingly distant
+notions, which formal writing does not produce. Metaphor is the *explanation*;
+the claim is about semantic spread and bridging, because sentence embeddings
+may not represent metaphor as metaphor. Testing it needs a prose comparison
+corpus: task-8.
 
-**Intended output:** OPEN — paper / thesis chapter / fellowship deliverable?
+**Intended output:** a conference abstract in the short term (plan kept outside the repository). The longer-horizon output (paper, thesis chapter
+or fellowship deliverable) is still OPEN.
 
 ## Relationship to other projects
 
@@ -103,6 +114,11 @@ Poetry is the **high-diversity anchor** — an upper reference point on the same
 measurement scale for narrative, metaphor, and expressive range. It is *not*
 directly compared to academic prose; the object of interest is the topological
 signature of structure, style, and flow in human-created writing.
+
+**Revised 2026-10-19 (Sungyeon, task-3):** poetry *is* now compared directly
+with ordinary, non-academic prose by the same authors, because the testable
+claim is that poetry spreads wider than ordinary writing (task-8). The
+comparison with academic prose is still not made.
 
 ## Methodology
 
@@ -202,7 +218,9 @@ not the scientific baseline. But two distinct roles were being conflated:
   Optionally strengthen with a control discipline having low AI-writing adoption
   over the same period — a difference-in-differences shape.
 - **Poetry is neither.** It is the high-diversity anchor on the measurement
-  scale.
+  scale. For the Phase 0 claim, *same-author prose* is the scientific baseline
+  that poetry is compared against (task-8), and a bag of lines from other poems
+  remains the nuisance calibration.
 
 ## Status
 

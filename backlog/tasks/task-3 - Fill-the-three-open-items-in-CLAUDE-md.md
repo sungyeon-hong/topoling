@@ -1,10 +1,10 @@
 ---
 id: task-3
 title: Fill the three open items in CLAUDE.md
-status: To Do
+status: In Progress
 priority: high
 created: 2026-09-14
-updated: 2026-09-30
+updated: 2026-10-19
 labels: [documentation, sungyeon-only]
 depends_on: []
 ---
@@ -53,3 +53,48 @@ October 2026 without compressing the whole schedule.
 
 The longer-horizon question — paper, thesis chapter or fellowship deliverable —
 is still open. A conference abstract is a milestone, not the destination.
+
+## Update 2026-10-19 — the claim is written (item 1 done)
+
+Sungyeon clarified what they mean by novelty: a poem is written differently
+from an ordinary description, with more metaphors and novel links connecting
+seemingly distant notions together, which may not arise in usual or formal
+writing. Their hypothesis is that poetry exhibits a wider spread of semantic
+features than usual texts, especially in H0.
+
+Made precise together, and agreed by Sungyeon:
+
+> Compared with prose by the same authors, cut into segments of the same
+> length, a poem's lines spread more widely across semantic space yet stay
+> linked to one another, giving longer H0 bars than prose but shorter than an
+> unordered bag of lines.
+
+**False if** poems' H0 bars are no longer than the matched prose under both
+embedding models.
+
+Notes on the wording:
+
+- **"Wider spread" means longer H0 bars, not larger components.** Lines further
+  from their nearest neighbours break into more, smaller components at a given
+  scale, which merge later.
+- **The claim has two halves.** Wide spread (distant notions) and bridging
+  (metaphor links them). The existing result that poems are *tighter* than
+  bags of other verse lines already supports the bridging half; the prose
+  comparison tests the spread half.
+- **Metaphor is the explanation, not the measurement.** Sentence embeddings may
+  not represent metaphor as metaphor.
+- **The unit mismatch is the main confound.** Poem lines are short fragments,
+  prose sentences longer and complete; short fragments may embed more
+  erratically and look "wider" for a trivial reason. Match segment length.
+- **Same-author prose** was chosen because it holds voice and period fixed.
+
+Also agreed: an order-aware measure (distance between consecutive lines, with
+a shuffled control) as support, since metaphor's "leaps" are a claim about
+flow that plain Rips cannot see. Fuller discourse analysis, and rhetorical
+move analysis of arXiv abstracts, are follow-on work.
+
+Item 1 done. Item 2 half done (conference abstract short term; longer horizon
+open). **Item 3, the record of approaches Sungyeon has already ruled out, is
+still open.** Testing the claim is task-8.
+
+- [x] Item 1, the falsifiable claim, written into `CLAUDE.md`.
