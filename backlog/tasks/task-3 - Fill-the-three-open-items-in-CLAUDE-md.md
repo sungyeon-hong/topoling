@@ -18,7 +18,7 @@ Sungyeon specifically. Nobody else can supply them.
    this project be wrong about? Everything downstream — which comparison is the
    headline, which baseline matters, what a negative result looks like —
    depends on this being written down.
-2. **The intended output.** Paper, thesis chapter, or fellowship deliverable.
+2. **The intended output.** For example, a paper or a conference abstract.
    This decides scope and timeline, and it decides how much the Phase 1 arXiv
    work needs to carry.
 3. **The record of approaches already ruled out.** Embedding models that were
@@ -51,8 +51,7 @@ one-sentence claim the critical path**. It is the abstract's first sentence,
 and the figures and framing both follow from it. It cannot be deferred past
 October 2026 without compressing the whole schedule.
 
-The longer-horizon question — paper, thesis chapter or fellowship deliverable —
-is still open. A conference abstract is a milestone, not the destination.
+The longer-horizon question, such as a journal paper, is still open. A conference abstract is a milestone, not the destination.
 
 ## Update 2026-10-19 — the claim is written (item 1 done)
 

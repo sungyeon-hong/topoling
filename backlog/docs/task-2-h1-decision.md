@@ -75,9 +75,8 @@ available now is the calibrated multiscale instrument (the displacement curve)
 plus H1 as a second, partly independent coherence measure. The one-sentence
 claim should be worded with this objection in mind.
 
-## Fellowship material
+## Earlier project material
 
-The abstract that `CLAUDE.md`'s Aim was reconstructed from is from Sungyeon's
-fellowship application. It addressed arXiv corpus analysis, not poetry, so its
+The project abstract that `CLAUDE.md`'s Aim was reconstructed from addressed arXiv corpus analysis, not poetry, so its
 reference to homogenisation loops remains consistent with this decision: loops
 are still an open question at exactly that level. No rewording needed.

@@ -67,18 +67,8 @@ may not represent metaphor as metaphor. Testing it needs a prose comparison
 corpus: task-8.
 
 **Intended output:** a conference abstract in the short term (venue and plan
-kept outside the repository). The longer-horizon output (paper, thesis chapter
-or fellowship deliverable) is still OPEN.
-
-## Relationship to other projects
-
-- **panic-tda** — shares the "TDA over generative-AI semantic trajectories"
-  frame, but studies *recursive model-to-model* trajectories. topoling studies
-  *human-authored corpora over historical time*. Keep method vocabulary and
-  embedding-model choices aligned so results are comparable across the two.
-- **geometry-driven-hyperuniformity** — methodologically unrelated. An early
-  proof-of-concept script borrowed text and dependency pins from it; neither was
-  carried into this public repository.
+kept outside the repository). The
+longer-horizon output, such as a journal paper, is still OPEN.
 
 ## Phasing
 
@@ -162,8 +152,7 @@ paper texts rather than abstracts.
 
 ### Embedding model — switch off SPECTER2 for sentence-level work
 
-The original proof of concept (an early scratch script, not carried into this
-public repository) used allenai/specter2_base and took the CLS token per
+An early proof of concept used allenai/specter2_base and took the CLS token per
 sentence. This is off-label: SPECTER2 is trained for *document-level* citation
 similarity on title+abstract pairs, and the CLS vector of an encoder not tuned
 for sentence similarity is a weak sentence representation. It is also
@@ -321,11 +310,10 @@ Sonnets 18, Barrett Browning 18).
   a UMAP step or a DuckDB store exists.
 - **This repository is public (2026-10-19)**, at
   github.com/sungyeon-hong/topoling, so the research trajectory can be traced.
-  It was created from an earlier private repository, kept unedited as an
-  archive, with its history cleaned: a scratch script carrying an unpublished
-  application abstract and a foreign requirements.txt were removed from every
-  commit, venue-specific wording was neutralised, and authorship was normalised
-  to `sungyeon-hong`. Commit dates and messages are otherwise unchanged.
+  Its history was curated before publication: two files unrelated to the
+  published work were removed from every commit, planning details were
+  reworded, and authorship was normalised to `sungyeon-hong`. Commit dates and
+  order are otherwise unchanged.
   CLAUDE.md, CONTRIBUTIONS.md and backlog/ are tracked as the least
   reproducible files here; data/ stays ignored on size grounds.
 - **Venue names, submission dates and publication plans never go in this

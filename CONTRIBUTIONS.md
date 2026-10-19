@@ -4,7 +4,7 @@ A dated record of who contributed what to this project, kept as the work
 happened. Sungyeon Hong is the sole researcher. AI assistance is logged per
 session, keeping what Claude proposed or did separate from what Sungyeon
 decided. Intended to be adaptable into a CRediT contributor statement, a
-journal or thesis AI-use disclosure, or an institutional record.
+journal or AI-use disclosure, or an institutional record.
 
 ## Human contributions
 
@@ -30,8 +30,8 @@ decision.
 
 **Documentation.** Read the existing scripts and pilot data and drafted
 `CLAUDE.md`: aims, phasing, status, workflow and known problems. The aims were
-reconstructed from a fellowship abstract SH had written and embedded in
-`scratch/toy_model.py`, then confirmed by SH.
+reconstructed from an earlier project abstract SH had written, then confirmed
+by SH.
 
 **Methodology input** (proposed by Claude, decided by SH):
 
@@ -95,10 +95,9 @@ sample capped at five poems per author.
   authorial voice. The replacement sample is 240 poems across 76 authors with
   no author above 7%.
 
-**Repository hygiene** (identified by Claude, decisions taken by SH). The
-`CLAUDE.md` note that the project was untracked with zero commits was wrong:
-`topoling/` was its own repository with a remote. *(Detail specific to the
-earlier private repository omitted from this public copy, 2026-10-19.)*
+**Repository hygiene** (identified by Claude, decisions taken by SH). Corrected
+a `CLAUDE.md` note claiming the project was untracked with zero commits; it was
+already its own git repository.
 
 **Pipeline implemented and first Phase 0 test run.** Wrote `src/embedding.py`
 (nomic-embed-text-v1.5, task-prefixed, L2-normalised to the unit sphere),

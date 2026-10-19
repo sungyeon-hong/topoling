@@ -17,7 +17,7 @@ H0 project about semantic dispersion?
 
 ## Why it matters
 
-The `Aim` section of `CLAUDE.md`, and the fellowship abstract it was
+The `Aim` section of `CLAUDE.md`, and the original project abstract it was
 reconstructed from, both lead on detecting "homogenisation loops". H1 is what
 would detect a loop. In the first Phase 0 run (2026-09-07) H1 showed nothing in
 any condition tested:
@@ -56,7 +56,7 @@ evidence about the method, not about either dataset.
 
 - [x] task-1 complete, so the H1 null is known to be model-independent or not.
 - [x] One option chosen and written into `CLAUDE.md`'s Aim section.
-- [x] If H1 is dropped or deferred, the wording of any fellowship or
+- [x] If H1 is dropped or deferred, the wording of any earlier project or
       publication material that promises loop detection is revisited.
 
 ## Decision 2026-10-19 (Sungyeon)
@@ -77,7 +77,7 @@ to exhibit loop structures (H1) - too short and so may have lean structures
 than usual texts. More importantly, it is not even necessary to consider
 homogenisation in the context of the shape of poetry."
 
-The fellowship abstract that promised loop detection addressed arXiv corpus
+The original project abstract that promised loop detection addressed arXiv corpus
 analysis, not poetry, so it stays consistent with this decision and needs no
 rewording. Full write-up, including the check on whether H1 is independent of
 H0: `backlog/docs/task-2-h1-decision.md`.
