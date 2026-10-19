@@ -1,5 +1,7 @@
 # topoling
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23466441.svg)](https://doi.org/10.5281/zenodo.23466441)
+
 **topology + linguistics.** Persistent homology applied to text, asking
 whether a body of writing is structurally exploratory or converging on a
 semantic mean.
@@ -44,8 +46,16 @@ committed; it is regenerated from the collectors.
 
 ## Citing
 
-Please cite this work using the details in `CITATION.cff` (GitHub shows them
-under "Cite this repository").
+Please cite this work as:
+
+> Hong, S. *topoling: persistent homology of semantic structure in text.*
+> Zenodo. https://doi.org/10.5281/zenodo.23466441
+
+That DOI always points to the latest version. Each release also has its own:
+v0.1.0 (Phase 0 instrument and claim, before testing) is
+[10.5281/zenodo.23466442](https://doi.org/10.5281/zenodo.23466442). The same
+details are in `CITATION.cff`, which GitHub shows under "Cite this
+repository".
 
 Sungyeon Hong, Australian National University.
 ORCID: [0000-0002-9897-1205](https://orcid.org/0000-0002-9897-1205)
