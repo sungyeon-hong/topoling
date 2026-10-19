@@ -57,9 +57,16 @@ about randomness — a maximally random corpus is not the ideal. See Baselines.
 **Testable claim (Sungyeon, 2026-10-19; task-3):** compared with prose by the
 same authors, cut into segments of the same length, a poem's lines spread more
 widely across semantic space yet stay linked to one another, giving longer H0
-bars than prose but shorter than an unordered bag of lines. **It is false if**
-poems' H0 bars are no longer than the matched prose under both embedding
-models. Sungyeon's reasoning: a poem is written differently from an ordinary
+bars than prose but shorter than an unordered bag of lines.
+
+**How it is judged** (Sungyeon, 2026-10-19, fixed before any test), across
+three embedding models (nomic-embed-text-v1.5, all-mpnet-base-v2,
+EmbeddingGemma 2): **supported** if poems' H0 bars are longer than the matched
+prose under all three; **false** if longer under none; **model-dependent** if
+longer under one or two, which is reported as such and not counted as
+support.
+
+Sungyeon's reasoning: a poem is written differently from an ordinary
 description, with more metaphors and novel links connecting seemingly distant
 notions, which formal writing does not produce. Metaphor is the *explanation*;
 the claim is about semantic spread and bridging, because sentence embeddings

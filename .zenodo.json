@@ -1,0 +1,22 @@
+{
+  "title": "topoling: persistent homology of semantic structure in text",
+  "upload_type": "software",
+  "description": "<p><strong>topoling</strong> applies persistent homology to text embeddings to ask whether a body of writing is structurally exploratory or converging on a semantic mean.</p><p>This release archives <strong>Phase 0</strong>: a persistent-homology instrument validated on 240 poems (four form arms, 76 poets, PoetryDB) under two embedding models, and the claim it will test next, <strong>stated before testing</strong>:</p><blockquote>Compared with prose by the same authors, cut into segments of the same length, a poem's lines spread more widely across semantic space yet stay linked to one another, giving longer H0 bars than prose but shorter than an unordered bag of lines.</blockquote><p>Judged across three embedding models (nomic-embed-text-v1.5, all-mpnet-base-v2, EmbeddingGemma 2): supported if poems' H0 bars are longer than the matched prose under all three; false if longer under none; model-dependent if longer under one or two, reported as such and not counted as support.</p><p>The repository is also a dated research log: work items and findings, including withdrawn results, are in <code>backlog/</code>, and <code>CONTRIBUTIONS.md</code> records who contributed what, including AI assistance.</p><p>Code is MIT-licensed; documentation and research writing are licensed CC BY 4.0.</p>",
+  "creators": [
+    {
+      "name": "Hong, Sungyeon",
+      "affiliation": "Australian National University",
+      "orcid": "0000-0002-9897-1205"
+    }
+  ],
+  "license": "cc-by-4.0",
+  "keywords": [
+    "persistent homology",
+    "topological data analysis",
+    "text embeddings",
+    "poetry",
+    "semantic diversity",
+    "metaphor"
+  ],
+  "language": "eng"
+}

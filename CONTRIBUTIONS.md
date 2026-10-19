@@ -185,6 +185,9 @@ project to a public repository.
 - **Raised by SH:** whether discourse analysis, focused on narrative flow,
   suits the study for both poetry and arXiv. Agreed as one order-aware
   supporting measure now, fuller analysis later.
+- The rule for judging the claim across three embedding models, fixed before
+  any test: supported only if it holds under all three, false if under none,
+  model-dependent otherwise.
 - To make the repository public under `sungyeon-hong`, with venue and
   publication plans kept private, and the licences below.
 

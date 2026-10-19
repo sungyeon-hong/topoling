@@ -70,7 +70,12 @@ Made precise together, and agreed by Sungyeon:
 > unordered bag of lines.
 
 **False if** poems' H0 bars are no longer than the matched prose under both
-embedding models.
+embedding models. *(Superseded the same day, before any test, when a third
+model was added in task-8. Sungyeon fixed a three-outcome rule: supported if
+longer under all three models, false if longer under none, model-dependent
+otherwise, reported as such and not counted as support. The original wording
+also let the claim survive on one model alone, which was weaker than the
+project's own robustness rule.)*
 
 Notes on the wording:
 

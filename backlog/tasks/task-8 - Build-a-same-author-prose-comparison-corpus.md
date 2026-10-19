@@ -75,7 +75,9 @@ Implementation notes:
       cleaning recorded (the same wrap-fragment care as PoetryDB).
 - [ ] The unit-matching rule is chosen and written down before results.
 - [ ] Poems and matched prose clouds are compared at matched point count on
-      H0, under all three embedding models.
+      H0, under all three embedding models, and the outcome judged by the
+      rule fixed in advance in `CLAUDE.md`: supported (all three), false
+      (none) or model-dependent (one or two).
 - [ ] Order-aware support: distance between consecutive lines vs consecutive
       prose segments, each against a shuffled-order control.
 - [ ] Findings written to `backlog/docs/`, stating plainly whether the claim
