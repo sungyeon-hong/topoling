@@ -10,16 +10,19 @@ Code: `src/prose_corpus.py`, one extractor per edition. Output:
 `uv run python src/prose_corpus.py`; downloads are cached in
 `data/raw/prose/gutenberg/`.
 
-**Status (2026-11-06):** Byron, Keats and Burns done. 801 letters, about
-321,000 words.
+**Status (2026-11-06):** Byron, Keats, Burns and both Brownings done. 1,768
+letters, about 983,000 words.
 
 | poet | edition | letters | words |
 |-|-|-|-|
-| Byron | Prothero, vol. 1 (adult letters only) | 122 | 45,847 |
-| Byron | Prothero, vol. 2 | 210 | 50,234 |
-| Keats | Colvin, *Letters to His Family and Friends* | 164 | 108,178 |
+| Byron | Prothero, vol. 1 (adult letters only) | 122 | 45,854 |
+| Byron | Prothero, vol. 2 | 210 | 50,227 |
+| Keats | Colvin, *Letters to His Family and Friends* | 164 | 108,139 |
 | Keats | Buxton Forman, *Letters to Fanny Brawne* | 37 | 12,200 |
-| Burns | Logie Robertson, *The Letters of Robert Burns* | 268 | 104,649 |
+| Burns | Logie Robertson, *The Letters of Robert Burns* | 268 | 104,656 |
+| Robert Browning | *Letters of RB and EBB*, vols 1–2 (his letters only) | 286 | 160,630 |
+| E. B. Browning | *Letters of RB and EBB*, vols 1–2 (her letters only) | 287 | 222,780 |
+| E. B. Browning | Kenyon, *Letters of EBB*, vols 1–2 | 394 | 278,835 |
 
 **Decisions (Sungyeon, 2026-11-06):**
 
@@ -254,6 +257,90 @@ first assumed**: the draw happened to pick mostly English poems, and only one
 drawn poem is heavily Scots. The gap is real and points the same way as the
 claim, so separate reporting stays.
 
+## The Brownings
+
+Done 2026-11-06.
+
+### *The Letters of Robert Browning and Elizabeth Barrett Barrett, 1845–1846* (2 vols, 1899)
+
+Gutenberg 16182 and 73891, published by their son.
+
+- **Splitting by writer.** Every letter is headed by its direction:
+  "_R.B. to E.B.B._" or "_E.B.B. to R.B._". Authorship is therefore printed,
+  not inferred, and each poet gets only the letters headed with their own
+  initials. This is the two-writer rule in `task-8-segmentation-rule.md`.
+  Every letter has a heading, so one writer's text cannot run into the
+  other's. **Counts match exactly:** vol. 1 has 140 R.B. and 141 E.B.B.
+  headings; vol. 2 has 146 of each.
+- **Layout and apparatus:**
+  - the body is flush left; datelines, addresses and signatures are pushed
+    right;
+  - there are few footnotes, all in vol. 1;
+  - asterisk rows in vol. 2 mark breaks inside a letter, with the same writer
+    continuing, so they do not end one;
+  - vol. 1 ends at "END OF THE FIRST VOLUME", vol. 2 at its index, after which
+    come the publisher's advertisements.
+- **Kept:** short quotations of the other's last letter at the opening of a
+  paragraph ("'Vex me,' or 'teaze me,' my own Ba, you cannot..."). These are
+  brief inline quotation, kept as for every poet; only set-off quotation is
+  removed.
+
+### *The Letters of Elizabeth Barrett Browning*, ed. Frederic G. Kenyon (2 vols, 1897)
+
+Gutenberg 13018 and 16646. **The hardest edition so far.**
+
+- **Kenyon's narrative shares the letters' indentation.** It opens each
+  chapter and also runs between letters, flush left like her letters. It
+  appears sometimes straight after her signature, sometimes after footnotes
+  or an asterisk row. Her own postscripts also follow her signature. Neither
+  indentation nor position separates the two voices.
+- **The fix is a voice filter** (`KenyonEBB.editorial`). With quotations set
+  aside, a paragraph is Kenyon's if it either:
+  - uses his narrative phrasing: "Miss Barrett's", "Mrs. Browning's", "the
+    Brownings", "the following letter", or a sentence opening with her name;
+    or
+  - has no I, you or we of its own *and* refers to her, her letters or her
+    books.
+
+  Once his voice appears, **the rest of the span up to the next heading is
+  dropped.** His narrative runs on to introduce the next letter, and the
+  documents he quotes in full sit inside it.
+- **Two refinements came from auditing the filter:**
+  - *Too broad at first.* The first version also dropped her own impersonal
+    lines ("The weather is wonderfully warm."). Counting "we/us/our" as her
+    voice, and requiring a reference to her, fixed that.
+  - *Too narrow at first.* Without the truncation, documents Kenyon quotes in
+    full passed as hers, because they are written in the first person:
+    **Thackeray's letter to her** ("My dear, kind Mrs. Browning,--Has Browning
+    ever had an aching tooth...") and Mary Russell Mitford's recollection of
+    her.
+- **Final audit:**
+  - a sample of 18 dropped paragraphs: all Kenyon;
+  - every kept paragraph naming her in the third person outside quotation
+    marks: both are hers ("never to call me Miss Barrett again", and her
+    protest about the *Athenaeum*);
+  - 14 randomly chosen last paragraphs, plus the final letter of 1861: all
+    hers, with no editor's coda.
+- **One known loss:** her formal note to Mr. Westwood, written entirely in
+  the third person ("Miss Barrett, inferring Mr. Westwood from the
+  handwriting, begs..."). The filter takes it for Kenyon, so vol. 1 yields 220
+  letters from 221 headings. Vol. 2 yields 174 from 174.
+- **Other details:**
+  - vol. 1 footnotes follow the annotated paragraph, with her text
+    continuing after them; vol. 2 collects a "FOOTNOTES:" section at each
+    chapter's end, which ends a letter;
+  - one heading carries a footnote marker ("_To Mr. Westwood_[59]") and was
+    at first missed, merging two letters;
+  - Kenyon's transcriptions of endorsements ("(Endorsed in another hand)
+    ...") are dropped.
+
+### Why E. B. Browning has so much prose
+
+Her prose comes from two sources, 681 letters and about 500,000 words. She is
+still one poet with a cap of 10 poems, so the amount of prose changes nothing
+in the comparison. It only gives more room to place each poem's matched
+passage.
+
 ## Changes that affected every edition
 
 Made while adding Burns, and checked against the earlier output letter by
@@ -269,6 +356,20 @@ letter:
   hurt me very much,--". Both are now kept.
 - **Gutenberg's closing line and short time stamps** are dropped, in every
   edition.
+- **Dates and stamps inside a letter are now dropped only when they really
+  are dates and stamps.** A date must contain a number ("50 Walpole Street:
+  Feb. 3, 1845."), and a time stamp must be four words or fewer ("Evening, 9
+  o'clock."). A looser version, briefly in use while adding the Brownings,
+  dropped real sentences such as "Good night and sound rest, my dearest
+  Clarinda!", and matched "Mar" in "Margaret" as a month. The filter also runs
+  after bracket removal, because an editor's bracket can span a blank line.
+- **Signatures and address stubs:** a short line with two words in capitals
+  ("JOHN KEATS alias JUNKETS.") is a signature. One or two words ending in
+  punctuation ("Maybole,.") is an address stub. Salutations are stripped after
+  both, so a date stub at the top cannot hide one.
+- **Every shared change is diffed against the previous output, letter by
+  letter.** The last round changed 10 earlier letters, all improvements or
+  trivial losses ("Adieu.", "Amen.").
 
 ## What this says about cost
 

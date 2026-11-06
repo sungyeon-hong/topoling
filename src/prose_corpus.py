@@ -194,6 +194,9 @@ class LetterEdition:
                 continue                     # signature; editor's address line
             if not re.search(r"[a-z]", text):
                 continue                     # all capitals, or a row of asterisks
+            if (len(text.split()) <= 5
+                    and len(re.findall(r"\b[A-Z]{3,}\b", text)) >= 2):
+                continue                     # signature ("JOHN KEATS alias JUNKETS.")
             if re.match(r"_(Extract|Fragment|Part) of\b|_Extract from\b", text):
                 continue                     # editor's italic note
             text = re.sub(r"\{([\w.]+)\}", r"\1", text)  # superscripts: Jan{y.} -> Jany.
@@ -205,14 +208,6 @@ class LetterEdition:
         while body and ((len(body[0].split()) <= 12 and self.DATELINE.search(body[0]))
                         or (len(body[0].split()) <= 4 and body[0].endswith("."))):
             body = body[1:]
-        # Dated entry headings inside journal-letters ("Saturday, Jany. 2nd.")
-        # and time stamps ("Evening, 9 o'clock.").
-        stamp = re.compile(r"o'clock|\b(Morning|Evening|Night|Noon|Midnight|Monday|"
-                           r"Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b", re.I)
-        body = [t for t in body if not (len(t.split()) <= 6
-                                        and (self.DATELINE.search(t) or stamp.search(t)))]
-        for i in range(min(3, len(body))):
-            body[i] = self.SALUTATION.sub("", body[i])
         # Editor's insertions: [1], [Thursday], [sic]; and bracket stubs left
         # where an insertion spans a paragraph break.
         # Innermost first, so a nested insertion ("[think me[23]]") cannot
@@ -225,6 +220,24 @@ class LetterEdition:
         body = [re.sub(r"\s*\[[^\]]*$", "", re.sub(r"^[^\[]*\]\.?\s*", "", t))
                 for t in body]
         # Closing formulas, wherever they sit (often stranded before a P.S.).
+        # After bracket removal, since an editor's bracket can span a blank
+        # line and leave a stub ("Friday Morn [Wesleyan Place, ... 1820.]").
+        # Dated entry headings inside journal-letters ("Saturday, Jany. 2nd.")
+        # and time stamps ("Evening, 9 o'clock.").
+        stamp = re.compile(r"o'clock|\b(Morn|Morning|Evening|Night|Noon|Midnight|Monday|"
+                           r"Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b", re.I)
+        # A date needs a number in it ("50 Walpole Street: Feb. 3, 1845."),
+        # and a stamp must be very short: otherwise "Good night and sound
+        # rest, my dearest Clarinda!" goes too, and "Mar" matches "Margaret".
+        body = [t for t in body if not (
+            (len(t.split()) <= 8 and re.search(r"\d", t) and self.DATELINE.search(t))
+            or (len(t.split()) <= 4 and stamp.search(t)))]
+        # Address stubs left by bracket removal ("Maybole,.").
+        body = [t for t in body if not (len(t.split()) <= 2 and t.rstrip()[-1:] in ",.;:")]
+        # Salutations, once datelines and stubs are gone from the top.
+        for i in range(min(3, len(body))):
+            body[i] = self.SALUTATION.sub("", body[i])
+        body = [t for t in body if t.strip()]
         body = [t for t in body if not (len(t.split()) <= 6 and self.CLOSING.search(t))]
         body = [t for t in body if t.strip() and not (
             len(t.split()) <= 12 and t.endswith((",", "."))
@@ -399,6 +412,151 @@ class LoganRobertson(LetterEdition):
             yield u
 
 
+class BrowningBarrett(LetterEdition):
+    """The Letters of Robert Browning and Elizabeth Barrett Barrett,
+    1845-1846 (2 vols, 1899), published by their son.
+
+    - Every letter is headed by its direction, "_R.B. to E.B.B._" or
+      "_E.B.B. to R.B._", so authorship is printed, not inferred. Each poet
+      gets only the letters headed with their own initials (the rule for
+      two-writer collections): one instance per writer per volume.
+    - Body flush left; datelines, addresses and signatures pushed right.
+      Vol. 1 uses "--" and straight quotes, vol. 2 em dashes and curly quotes.
+    - Few footnotes, as "[Footnote N: ...]" blocks (vol. 1 only).
+    - Asterisk rows in vol. 2 mark breaks inside a letter, with the same
+      writer continuing, so they do not end a letter.
+    - Vol. 1 ends at "END OF THE FIRST VOLUME"; vol. 2 at its index, after
+      which come the publisher's advertisements.
+    - Both writers are adult: Robert born 1812, Elizabeth 1806.
+    """
+
+    HEAD = re.compile(r"^_(R\.B\.|E\.B\.B\.) to (R\.B\.|E\.B\.B\.)_\s*$")
+    END = re.compile(r"^(END OF THE FIRST VOLUME|INDEX)\s*$")
+    SEP = None
+    SIGNATURE = re.compile(
+        r"^\s*(R\. ?B(ROWNING|rowning)?\.?|E\. ?B\. ?B\.?|Ba\.?|BA\.?|"
+        r"ELIZABETH B(\.|ARRETT)? BARRETT\.?|Elizabeth B\. Barrett\.?|"
+        r"Your own Ba\.?|R\. B\.?)\s*$")
+    NAMES = {"R.B.": "Robert Browning", "E.B.B.": "Elizabeth Barrett Barrett"}
+
+    def __init__(self, gid, label, writer):
+        super().__init__(gid, label)
+        self.writer = writer            # "R.B." or "E.B.B."
+        self._ordinal = None
+
+    def keep(self, head):
+        return head.group(1) == self.writer
+
+    def unit_id(self, head, lines, at):
+        # Number letters by their place in the whole correspondence, both
+        # writers counted, so ids say where a letter falls in the exchange.
+        if self._ordinal is None:
+            pos = [i for i, l in enumerate(lines) if self.HEAD.match(l)]
+            self._ordinal = {i: n for n, i in enumerate(pos, 1)}
+        who = "rb" if self.writer == "R.B." else "ebb"
+        return f"{self.label}-{self._ordinal[at]:03d}-{who}"
+
+    def units(self):
+        self._ordinal = None
+        for u in super().units():
+            u["recipient"] = self.NAMES["E.B.B." if self.writer == "R.B." else "R.B."]
+            yield u
+
+
+class KenyonEBB(LetterEdition):
+    """The Letters of Elizabeth Barrett Browning, ed. Frederic G. Kenyon
+    (2 vols, 1897).
+
+    - Letters headed "_To Mrs. Martin_". Kenyon's biographical narrative
+      opens each chapter AND runs between letters, flush left at exactly the
+      body's indentation, sometimes straight after her signature, sometimes
+      after the footnotes or an asterisk row. Her own postscripts also
+      follow the signature. Neither indentation nor position separates the
+      two voices, so this edition adds a voice filter (see `editorial`), and
+      once his voice appears the rest of the span up to the next heading is
+      dropped, since the documents he quotes in full sit inside his narrative.
+    - Vol. 1 footnotes are "[Footnote N: ...]" blocks after the annotated
+      paragraph, with her text continuing after them; vol. 2 collects a
+      "FOOTNOTES:" section at the end of each chapter, which ends a letter.
+    - Signatures vary: "BA.", "E.B.B.", "ELIZABETH B. BARRETT.", "ELIBET.",
+      and often fused with a closing ("Your loving BA--").
+    - Vol. 1 ends at "END OF THE FIRST VOLUME"; vol. 2 at its index.
+    - All letters are adult: she was born 6 March 1806, and the first letter
+      here dates from about September 1828.
+    """
+
+    HEAD = re.compile(r"^_To ([^_]+)_(?:\[\d+\])?\s*$")   # "_To Mr. Westwood_[59]"
+    STOP = re.compile(r"^(CHAPTER\b|FOOTNOTES:)")
+    END = re.compile(r"^(END OF THE FIRST VOLUME|INDEX\s*$)")
+    SEP = None
+    SIGNATURE = re.compile(
+        r"^\s*(BA|E\. ?B\. ?B\.?|ELIBET|ELIZABETH B(\.|ARRETT)? (BARRETT|BROWNING)|"
+        r"ELIZABETH BARRETT BROWNING|E\. ?B\. ?(BARRETT|BROWNING))[.,-]*\s*$")
+    # Her voice: first or second person, including "we/us/our" (she writes
+    # as half of a couple; Kenyon writes about "the Brownings").
+    FIRST_SECOND = re.compile(r"\b(I|me|my|mine|myself|you|your|yours|yourself|"
+                              r"we|us|our|ours|ourselves)\b", re.I)
+    # Kenyon's subject: her, in the third person, or her letters and books.
+    ABOUT_HER = re.compile(r"\b(she|her|hers|herself|Miss Barrett|Mrs\. Browning|"
+                           r"Mr\. Browning|the Brownings|Elizabeth Barrett|"
+                           r"letters?|volumes?|correspondence)\b")
+    QUOTED = re.compile(r"(['\"\u2018\u201c])[^'\"\u2018\u2019\u201c\u201d]{0,400}?['\"\u2019\u201d]")
+    # Kenyon's narrative phrasing, his even when he writes "I" or "we" or
+    # quotes her. She writes "call me Miss Barrett", never the possessive.
+    NARRATIVE = re.compile(r"\b(Miss Barrett's|Mrs\. Browning's|Elizabeth Barrett's|"
+                           r"Mr\. Browning's|the Brownings|"
+                           r"Mrs\. Browning (speaks|writes|says|wrote|had|was)|"
+                           r"Miss Barrett (speaks|writes|says|wrote|had|was)|"
+                           r"(above|following|preceding) letters?|letters? which follows?|"
+                           r"letters that passed)\b"
+                           # a sentence opening with her name is narration
+                           r"|(?:^|[.!?;]\s+|\b(?:But|And|Yet|Here|There)\s+)"
+                           r"(?:Mrs\. Browning|Miss Barrett)\b")
+
+    def __init__(self, gid, label):
+        super().__init__(gid, label)
+        self._ordinal = None
+
+    @classmethod
+    def editorial(cls, text) -> bool:
+        """Kenyon's voice: about her in the third person, with no I, you or
+        we of its own.
+
+        Quotations are set aside first, since Kenyon quotes her letters. A
+        paragraph with no pronoun of her own voice is editorial only if it
+        also refers to her, her letters or her books; her own impersonal
+        lines ("The weather is wonderfully warm.") are kept.
+        """
+        own = cls.QUOTED.sub(" ", text)
+        if cls.NARRATIVE.search(own):
+            return True
+        return not cls.FIRST_SECOND.search(own) and bool(cls.ABOUT_HER.search(own))
+
+    def clean(self, paras):
+        # Once Kenyon's voice appears, the rest of the span is his: his
+        # narrative runs on to introduce the next letter, and the documents
+        # he quotes in full (Thackeray's letter to her, Miss Mitford's
+        # recollections) sit inside it, in the first person.
+        out = []
+        for t in super().clean(paras):
+            if self.editorial(t):
+                break
+            if re.match(r"\((Endorsed|Address|Addressed|Postmark)", t):
+                continue                     # Kenyon's transcriptions
+            out.append(t)
+        return out
+
+    def unit_id(self, head, lines, at):
+        if self._ordinal is None:
+            pos = [i for i, l in enumerate(lines) if self.HEAD.match(l)]
+            self._ordinal = {i: n for n, i in enumerate(pos, 1)}
+        return f"{self.label}-{self._ordinal[at]:03d}"
+
+    def units(self):
+        self._ordinal = None
+        yield from super().units()
+
+
 # --------------------------------------------------------------------------
 # Registry: one entry per edition, added as each is read and its extractor
 # written. Never point an extractor at an edition it was not written for.
@@ -415,6 +573,18 @@ SOURCES = [
      "personal", BuxtonForman(60433, "brawne")),
     ("Robert Burns", 9863, "The Letters of Robert Burns (ed. Logie Robertson)",
      "personal", LoganRobertson(9863, "burns")),
+    ("Robert Browning", 16182, "Letters of RB and EBB, vol. 1 (his letters only)",
+     "personal", BrowningBarrett(16182, "rbebb1", "R.B.")),
+    ("Robert Browning", 73891, "Letters of RB and EBB, vol. 2 (his letters only)",
+     "personal", BrowningBarrett(73891, "rbebb2", "R.B.")),
+    ("Elizabeth Barrett Browning", 16182, "Letters of RB and EBB, vol. 1 (her letters only)",
+     "personal", BrowningBarrett(16182, "rbebb1", "E.B.B.")),
+    ("Elizabeth Barrett Browning", 73891, "Letters of RB and EBB, vol. 2 (her letters only)",
+     "personal", BrowningBarrett(73891, "rbebb2", "E.B.B.")),
+    ("Elizabeth Barrett Browning", 13018, "The Letters of EBB, vol. 1 (ed. Kenyon)",
+     "personal", KenyonEBB(13018, "kenyon1")),
+    ("Elizabeth Barrett Browning", 16646, "The Letters of EBB, vol. 2 (ed. Kenyon)",
+     "personal", KenyonEBB(16646, "kenyon2")),
 ]
 
 
