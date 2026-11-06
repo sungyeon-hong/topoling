@@ -201,6 +201,16 @@ are not the retention figures for this comparison. Those come from the draw.
 
    In a two-writer collection (the Browning–Barrett letters), each poet's poems
    are matched only with that poet's own letters.
+
+   **Adult prose only** (added 2026-11-06): only writing from age 18 on. The
+   drawn poems are adult work, and a schoolboy's letters are not the poet's
+   prose voice.
+
+   **Matched by author, not by period** (added 2026-11-06). Prose need not
+   come from the same years as the poem. The rule asks for the same author,
+   and PoetryDB does not date poems. A period-matched comparison is a later
+   robustness check. Where coverage is known to be lopsided, it is recorded in
+   `task-8-prose-cleaning.md`: Byron's letters on Gutenberg stop in 1814.
 6. **Matching passages.**
    - Each poem gets its own passage of its poet's prose, **never overlapping**
      another poem's passage.

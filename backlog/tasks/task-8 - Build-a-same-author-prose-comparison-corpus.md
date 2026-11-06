@@ -176,6 +176,9 @@ Remaining:
    cutting. Comparison B covers 55 of the 120. See
    `backlog/docs/task-8-poem-draw.md`. The Phase 0 sample issues found along
    the way are task-9.
-3. Download and clean the 12 poets' prose.
+3. Download and clean the 12 poets' prose. **In progress:** Byron and Keats
+   done (533 letters, about 216,000 words; `src/prose_corpus.py`,
+   `backlog/docs/task-8-prose-cleaning.md`). Adult prose only; matched by
+   author, not period. Ten poets to go.
 4. Wire in EmbeddingGemma 2.
 5. Run A, B and the controls.
