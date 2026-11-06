@@ -85,12 +85,21 @@ minimum.
   cloud. The draw is unaffected: every selected poem stays within 4–200 distinct
   lines after stripping. So *n* and *k* in the record are the draw-time values,
   and they are recomputed after stripping when the prose is cut.
-- **Burns is also reported on his own**, alongside Edward Thomas. His poems
-  are largely in Scots and his letters in standard English. A model trained
-  mostly on modern English may place dialect words idiosyncratically, which
-  would spread his poems' points wider. That is the same direction as the
-  claim, so his contribution must be visible separately, as well as through the
-  leave-one-poet-out check.
+- **Burns is also reported on his own**, alongside Edward Thomas. A dialect
+  gap between his poems and his letters would push his poems' spread in the
+  same direction as the claim, because a model trained mostly on modern
+  English may place Scots words idiosyncratically. **Measured after the
+  letters were extracted** (`scratch/scots_share_probe.py`; a lower bound,
+  from a word list):
+  - **the 10 drawn poems** average 3.1% Scots words, with one ballad at 17.7%
+    and five at 0%;
+  - **all 58 eligible poems** average 6.1%;
+  - **his letters** average 0.2%.
+
+  The gap is real but smaller than first assumed. An earlier version of this
+  note said his poems "are largely in Scots", which overstates it for the poems
+  drawn. His contribution is still kept visible separately, as well as through
+  the leave-one-poet-out check.
 
 ## Found in passing: the Phase 0 sample
 

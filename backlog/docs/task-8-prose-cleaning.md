@@ -10,15 +10,16 @@ Code: `src/prose_corpus.py`, one extractor per edition. Output:
 `uv run python src/prose_corpus.py`; downloads are cached in
 `data/raw/prose/gutenberg/`.
 
-**Status (2026-11-06):** Byron and Keats done, 533 letters, about 216,000
-words.
+**Status (2026-11-06):** Byron, Keats and Burns done. 801 letters, about
+321,000 words.
 
 | poet | edition | letters | words |
 |-|-|-|-|
-| Byron | Prothero, vol. 1 (adult letters only) | 122 | 45,851 |
+| Byron | Prothero, vol. 1 (adult letters only) | 122 | 45,847 |
 | Byron | Prothero, vol. 2 | 210 | 50,234 |
 | Keats | Colvin, *Letters to His Family and Friends* | 164 | 108,178 |
 | Keats | Buxton Forman, *Letters to Fanny Brawne* | 37 | 12,200 |
+| Burns | Logie Robertson, *The Letters of Robert Burns* | 268 | 104,649 |
 
 **Decisions (Sungyeon, 2026-11-06):**
 
@@ -194,6 +195,80 @@ Gutenberg 60433. 37 letters.
   Brawne XXXI): both are Keats's prose only.
 - **Byron re-checked after every shared change.** The six differences were
   all improvements (a heading, a stanza label and signatures removed).
+
+## Burns: *The Letters of Robert Burns*, ed. J. Logie Robertson
+
+Gutenberg 9863. Done 2026-11-06. **268 letters, about 105,000 words.** All are
+adult: Burns was born 25 January 1759, and the earliest letters (to Alison
+Begbie) date from about 1780.
+
+### How the edition is laid out
+
+- **A selection, in three sections, each opened by the editor's prefatory
+  note.** The sections are General Correspondence (206 letters, split in two
+  around the others), Letters to Clarinda (34) and the Thomson letters (28).
+  Only Burns's side is printed; Clarinda's and Thomson's appear only in
+  footnotes, which are removed.
+- **Headings.** General letters are headed "LVI-To DR. MOORE.", with dashes
+  typeset irregularly. Clarinda and Thomson letters are headed by a bare
+  numeral, sometimes without its full stop ("IX"). One general item, XXXI,
+  is not a letter but a mock decree headed "IN THE NAME OF THE NINE"; it is
+  Burns's own prose and is kept.
+- **Scanning errors in the numerals:** "LVIL" for LVII, "CXLL" for CXLI, "CII"
+  twice, "CXVIII" printed for CXCVIII (duplicating a real letter). Letters are
+  therefore identified by section and running sequence
+  (`burns-239-general-CCV`), with the printed numeral kept only as a label.
+- **Asterisk rows** usually separate letters but three times mark an omission
+  inside one, with Burns's own text after them. So they do not end a letter;
+  headings and section titles do. Section titles also cut off the editor's
+  prefatory notes.
+- **Footnotes** are indented `[Footnote N: ...]` blocks. Verse is indented two
+  spaces.
+
+### Checks the Burns output passed
+
+- **Every section complete and in order:** General I–CCVI, Clarinda I–XXXIV,
+  Thomson I–XXVIII. Every apparent step backwards in the general numbering is
+  one of the scanning errors above.
+- **No residue:** no brackets, footnotes, prefatory notes, separators or
+  italic markup.
+- **Read in full:** two letters (seed 5; General CCV, Thomson XII), plus a
+  sample of 12 short paragraphs. That sample found two leaks, now fixed:
+  Gutenberg's closing line, which this file repeats before its end marker, and
+  time stamps inside letters ("Evening, 9 o'clock.").
+
+### Scots: the reason Burns is reported separately
+
+`scratch/scots_share_probe.py` counts the share of words found in a list of
+common Scots forms (a lower bound, for comparison only):
+
+| text | Scots words |
+|-|-|
+| the 10 drawn poems | 3.1% (one ballad 17.7%, five 0%) |
+| all 58 eligible poems | 6.1% (26 above 5%) |
+| his letters | 0.2% (2 of 268 above 5%) |
+| Byron's and Keats's letters | 0.0% |
+
+The letters are standard English. The poems carry some Scots, but **less than
+first assumed**: the draw happened to pick mostly English poems, and only one
+drawn poem is heavily Scots. The gap is real and points the same way as the
+claim, so separate reporting stays.
+
+## Changes that affected every edition
+
+Made while adding Burns, and checked against the earlier output letter by
+letter:
+
+- **Italic markup removed.** Gutenberg marks italics with underscores
+  ("_jeu-d'esprit_"); those are typesetting, not words.
+- **Salutation rule narrowed.** It now accepts a salutation word or title
+  ("Mr. Ridge,--"), a phrase in capitals ("DEAR WEBSTER,--"), or one or two
+  names ("Thomas Moore,--"), and no longer any capitalised opening before a
+  dash. The broad version had wrongly cut two real sentences: Byron's "You
+  will feel for poor Hobhouse,--" and Keats's "Your Letter to me at Bedhampton
+  hurt me very much,--". Both are now kept.
+- **Gutenberg's closing line and short time stamps** are dropped, in every
+  edition.
 
 ## What this says about cost
 

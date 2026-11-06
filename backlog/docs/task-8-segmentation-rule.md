@@ -164,40 +164,11 @@ are not the retention figures for this comparison. Those come from the draw.
    Robinson, and Dickinson from a non-Gutenberg source. Edward Thomas is in, and
    is also reported on his own, because his lyrical nature prose makes him the
    most stringent pairing.
-   **Burns** is also reported on his own (added 2026-11-06, at the draw). His
-   poems are largely in Scots and his letters in standard English. Dialect
-   words may be placed idiosyncratically by the embedding model, which would
-   push his poems' spread in the same direction as the claim.
-2. **Eligible poems.**
-   - Wrap fraction at most 0.10, the existing rule (`MAX_WRAP_FRACTION` in
-     `src/poetry_forms.py`).
-   - **4 to 200 distinct lines.**
-   - The ceiling keeps a whole epic out of the draw. PoetryDB stores Byron's
-     *Don Juan* as one poem of 16,088 lines, and its matched prose would span
-     whole volumes. The ceiling also keeps a poem a single text rather than a
-     book.
-   - The eligible pool runs from 17 poems (Keats) to 247 (Shelley), 896 in
-     all.
-3. **The draw.**
-   - **10 poems per poet**, drawn uniformly at random from that poet's
-     eligible pool, with **seed 20261106**, the date the rule was fixed.
-   - **No redraws.** A drawn poem that later turns out to be unusable (for
-     example a duplicate, or a mislabelled translation) is replaced by the next
-     poem in the same seeded order, and the replacement is recorded.
-   - About 120 poems in all.
-4. **Prose: letters and essays only.** No fiction, no drama, no "prose poems"
-   (Poe's *Eureka*). Prose is tagged *personal* (letters, journals, travel,
-   memoir) or *argued* (essays, criticism, prefaces, treatises), and the two are
-   reported separately as already set out under "Prose register" below.
-5. **Authorship: only the poet's own prose, written alone.** Before any segment
-   is cut, remove:
-   - **text by other hands:** editors' footnotes, introductions and linking
-     narrative, and letters *to* the poet;
-   - **co-written works:** Shelley's *Six Weeks' Tour* is excluded;
-   - **speech transcribed by others:** Coleridge's *Table Talk* is excluded;
-   - **all quotation, verse quotation above all:** Swinburne quoting
-     Shakespeare, Poe quoting *The Raven*. Verse inside the prose arm would blur
-     the very contrast under test.
+   **Burns** is also reported on his own (added 2026-11-06, at the draw).
+   A dialect gap between poems and letters would push his poems' spread in
+   the same direction as the claim. Measured: drawn poems 3.1% Scots words,
+   letters 0.2% (`task-8-prose-cleaning.md`). The gap is real but smaller than
+   first assumed.
 
    In a two-writer collection (the Browning–Barrett letters), each poet's poems
    are matched only with that poet's own letters.

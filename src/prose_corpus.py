@@ -47,7 +47,10 @@ def fetch(gid: int) -> str:
     lines = path.read_text(encoding="utf-8").replace("\r", "").split("\n")
     s = next(i for i, l in enumerate(lines) if l.startswith("*** START"))
     e = next(i for i, l in enumerate(lines) if l.startswith("*** END"))
-    return "\n".join(lines[s + 1:e])
+    # Some files repeat Gutenberg's closing line before the end marker.
+    body = [l for l in lines[s + 1:e]
+            if not re.match(r"\s*End of (the )?Project Gutenberg", l, re.I)]
+    return "\n".join(body)
 
 
 def paragraphs(lines):
@@ -113,9 +116,14 @@ class LetterEdition:
     CLOSING = re.compile(r"\b(yours|affectionate|believe me|ever|truly|"
                          r"sincerely|faithfully|obliged|remain)\b", re.I)
     # "MY DEAR SIR,--", "My dear Reynolds--", "MY DAINTIE DAVIE--"
+    # A salutation word or title ("Mr. Ridge,--"), a phrase in capitals
+    # ("DEAR WEBSTER,--"), or one or two names ("Thomas Moore,--"). Not any
+    # capitalised opening: "You will receive my Juvenilia,--" and "You will
+    # feel for poor Hobhouse,--" are sentences.
     SALUTATION = re.compile(
-        r"^(?:(?:My|MY|Dear|DEAR|Sir|SIR|Madam|MADAM)\b[A-Za-z .']{0,40},?"
-        r"|[A-Z][A-Za-z .']{0,40},)"
+        r"^(?:(?:My|MY|Deare?|DEAR|Dearest|DEAREST|Sir|SIR|Madam|MADAM|"
+        r"Mr|Mrs|Miss|Dr)\b[A-Za-z .']{0,40},?|[A-Z][A-Z .']{0,40},"
+        r"|[A-Z][a-z]+(?: [A-Z][a-z]+)?,)"
         r"(?:(?<=,)\s*-{1,2}|\s*--|\s*\u2014)\s*")
     DEFAULT_INDENT = 0     # used only when a letter has nothing to measure
     RECIPIENT = None       # for editions whose headings name no recipient
@@ -151,10 +159,13 @@ class LetterEdition:
                     break
             text = self.clean(list(paragraphs(span)))
             if text:
-                yield {"unit": f"{self.label}-letter{head.group(1)}",
+                yield {"unit": self.unit_id(head, lines, a),
                        "recipient": (head.group(2) if head.re.groups >= 2
                                      else self.RECIPIENT),
                        "text": "\n\n".join(text)}
+
+    def unit_id(self, head, lines, at) -> str:
+        return f"{self.label}-letter{head.group(1)}"
 
     def body_indent(self, paras) -> int:
         inds = []
@@ -186,6 +197,7 @@ class LetterEdition:
             if re.match(r"_(Extract|Fragment|Part) of\b|_Extract from\b", text):
                 continue                     # editor's italic note
             text = re.sub(r"\{([\w.]+)\}", r"\1", text)  # superscripts: Jan{y.} -> Jany.
+            text = text.replace("_", "")             # Gutenberg's italic markup
             text = re.sub(r"(\s*\*)+\s*", " ", text).strip()  # editor's asterisks: omissions, censored names
             body.append(text)
 
@@ -193,8 +205,12 @@ class LetterEdition:
         while body and ((len(body[0].split()) <= 12 and self.DATELINE.search(body[0]))
                         or (len(body[0].split()) <= 4 and body[0].endswith("."))):
             body = body[1:]
-        # Dated entry headings inside journal-letters ("Saturday, Jany. 2nd.").
-        body = [t for t in body if not (len(t.split()) <= 6 and self.DATELINE.search(t))]
+        # Dated entry headings inside journal-letters ("Saturday, Jany. 2nd.")
+        # and time stamps ("Evening, 9 o'clock.").
+        stamp = re.compile(r"o'clock|\b(Morning|Evening|Night|Noon|Midnight|Monday|"
+                           r"Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b", re.I)
+        body = [t for t in body if not (len(t.split()) <= 6
+                                        and (self.DATELINE.search(t) or stamp.search(t)))]
         for i in range(min(3, len(body))):
             body[i] = self.SALUTATION.sub("", body[i])
         # Editor's insertions: [1], [Thursday], [sic]; and bracket stubs left
@@ -325,6 +341,64 @@ class BuxtonForman(LetterEdition):
     DEFAULT_INDENT = 4
 
 
+class LoganRobertson(LetterEdition):
+    """Burns, The Letters of Robert Burns, selected by J. Logie Robertson.
+
+    - Three sections, each opened by the editor's prefatory note: General
+      Correspondence (split in two around the others), Letters to Clarinda,
+      and the Thomson letters. Only Burns's own letters are printed;
+      Clarinda's and Thomson's side appears only in footnotes.
+    - General letters are headed "LVI-To DR. MOORE.", with dashes typeset
+      irregularly; one, XXXI, is a mock decree headed "IN THE NAME OF THE
+      NINE". Clarinda and Thomson letters are headed by a bare numeral,
+      sometimes without its full stop ("IX").
+    - Scanning errors in the numerals ("LVIL" for LVII, "CXVIII" printed for
+      CXCVIII, which duplicates a real letter), so letters are identified by
+      section and running sequence, with the printed numeral kept as a label.
+    - Asterisk rows usually separate letters but sometimes mark an omission
+      inside one, so they do not end a letter; headings and section titles do.
+    - Body flush left; verse indented two; footnotes "[Footnote N: ...]"
+      indented three, placed after the paragraph or at the letter's end.
+    - All letters are adult: Burns was born 25 January 1759, and the first
+      letters (to Alison Begbie) date from about 1780.
+    """
+
+    HEAD = re.compile(
+        r"^([IVXLC]+)\.?(?:-{1,3}\s*(?:TO\b\s*(.+?)|(IN THE NAME OF THE NINE.*?)))?"
+        r"\s*(\[\d+\])?\s*$", re.I)
+    SECTION = re.compile(r"^(GENERAL CORRESPONDENCE|THE CLARINDA LETTERS|"
+                         r"LETTERS TO CLARINDA|THE THOMSON LETTERS?)\b")
+    STOP = re.compile(r"^(GENERAL CORRESPONDENCE|THE CLARINDA LETTERS|"
+                      r"NOTE PREFATORY|LETTERS TO CLARINDA|THE THOMSON LETTERS?|"
+                      r"PREFATORY NOTE)\b")
+    START = re.compile(r"^GENERAL CORRESPONDENCE\.\s*$")
+    SEP = None
+
+    def __init__(self, gid, label):
+        super().__init__(gid, label)
+        self.seq = 0
+
+    def unit_id(self, head, lines, at):
+        self.seq += 1
+        section = "general"
+        for l in reversed(lines[:at]):
+            m = self.SECTION.match(l)
+            if m:
+                section = ("clarinda" if "CLARINDA" in m.group(1) else
+                           "thomson" if "THOMSON" in m.group(1) else "general")
+                break
+        return f"{self.label}-{self.seq:03d}-{section}-{head.group(1)}"
+
+    def units(self):
+        self.seq = 0
+        for u in super().units():
+            if u["recipient"] is None:
+                u["recipient"] = ("Clarinda (Agnes M'Lehose)" if "clarinda" in u["unit"]
+                                  else "George Thomson" if "thomson" in u["unit"]
+                                  else None)
+            yield u
+
+
 # --------------------------------------------------------------------------
 # Registry: one entry per edition, added as each is read and its extractor
 # written. Never point an extractor at an edition it was not written for.
@@ -339,6 +413,8 @@ SOURCES = [
      "personal", Colvin(35698, "colvin")),
     ("John Keats", 60433, "Letters to Fanny Brawne (ed. Buxton Forman)",
      "personal", BuxtonForman(60433, "brawne")),
+    ("Robert Burns", 9863, "The Letters of Robert Burns (ed. Logie Robertson)",
+     "personal", LoganRobertson(9863, "burns")),
 ]
 
 

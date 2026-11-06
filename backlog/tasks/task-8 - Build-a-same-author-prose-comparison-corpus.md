@@ -176,9 +176,11 @@ Remaining:
    cutting. Comparison B covers 55 of the 120. See
    `backlog/docs/task-8-poem-draw.md`. The Phase 0 sample issues found along
    the way are task-9.
-3. Download and clean the 12 poets' prose. **In progress:** Byron and Keats
-   done (533 letters, about 216,000 words; `src/prose_corpus.py`,
+3. Download and clean the 12 poets' prose. **In progress:** Byron, Keats
+   and Burns done (801 letters, about 321,000 words; `src/prose_corpus.py`,
    `backlog/docs/task-8-prose-cleaning.md`). Adult prose only; matched by
-   author, not period. Ten poets to go.
+   author, not period. Burns's letters are standard English while his drawn
+   poems average 3.1% Scots words, a smaller gap than first assumed. Nine
+   poets to go.
 4. Wire in EmbeddingGemma 2.
 5. Run A, B and the controls.
