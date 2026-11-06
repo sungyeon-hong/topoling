@@ -71,7 +71,10 @@ description, with more metaphors and novel links connecting seemingly distant
 notions, which formal writing does not produce. Metaphor is the *explanation*;
 the claim is about semantic spread and bridging, because sentence embeddings
 may not represent metaphor as metaphor. Testing it needs a prose comparison
-corpus: task-8.
+corpus: task-8. **How poems and prose are cut into points is fixed in advance
+too** — see Segmentation under Method decisions, settled 2026-11-06 before any
+prose existed, because the segment-length artifact points the same way the
+claim does.
 
 **Intended output:** a conference abstract in the short term (venue and plan
 kept outside the repository). The
@@ -156,6 +159,51 @@ uninterpretable. Set a floor (~25 points) below which no document-level H1 claim
 is made. Poems taken line-by-line often clear this; abstracts do not. So in
 practice document-level analysis is poetry-only, unless Phase 1 moves to full
 paper texts rather than abstracts.
+
+### Segmentation — match the knife before comparing genres
+
+Fixed 2026-11-06, before any prose was collected; full reasoning and the
+measurements behind it in `backlog/docs/task-8-segmentation-rule.md`.
+
+**Why this is not a detail.** Short segments embed further apart than long ones,
+because a longer segment's vector averages over more content and regresses
+toward the document centroid, and because a short fragment underdetermines
+meaning and is placed more idiosyncratically. Both give **longer H0 bars for
+shorter segments**. Poem lines run 5.8–7.9 words; prose sentences run far
+longer. The artifact therefore points the same way the claim does, and an
+uncontrolled poem-versus-prose comparison is not a weak test but no test at all.
+
+**A poem's line is a sub-sentential fragment** (measured over 121,544 lines):
+68.0% sit wholly inside a sentence, 21.6% end at a boundary, 10.4% straddle
+one. A poem's sentence runs ~22 words against a ~6.4-word line. Lineation is a
+partition imposed on running syntax — so cutting prose sub-sententially is the
+faithful analogue of what a poem does to itself, and prose chunks are cut
+straight through sentence boundaries rather than respecting them.
+
+Two **co-primary** comparisons, neither subordinate to the other:
+
+- **A, line level.** Per poem, take *n* distinct lines totalling *W* words, set
+  **k = round(W/n)**, and cut *n* × *k* words of that author's prose into *n*
+  segments of *k* words. Matched word budget, granularity and point count. Keeps
+  all four arms.
+- **B, sentence level.** Poem sentences against prose sentences, *n* matched,
+  poems with **≥ 8 sentences** only. Sonnets are excluded by construction
+  (median 4 sentences). Retains ~77% / 65% / 49% of refrain_song / irregular /
+  ballad_stanza.
+
+Agreement across A and B is strong evidence. **Disagreement is a finding and is
+reported as one** — never resolved by keeping the friendlier number.
+
+**The lineation control:** same poem, same *k*, same *n*, cut at the poet's line
+breaks versus cut blindly. It separates "poetry's *language* is wider" (survives
+re-cutting) from "poetry *as presented* is wider" (does not). The second would
+require rewording the claim.
+
+Because *n* matches exactly, the headline statistic is the **paired raw**
+`h0_mean_life_nondup`; excess-over-corpus-control is reported alongside for
+continuity with Phase 0, not as the test. Report mean content words per segment
+with every comparison: sub-sentential cutting can produce contentless prose
+fragments that clump and bias the prose arm *narrower*, flattering the claim.
 
 ### Embedding model — switch off SPECTER2 for sentence-level work
 
@@ -376,6 +424,18 @@ Sonnets 18, Barrett Browning 18).
 - Do not use a shuffled-line control with plain Rips. A Rips complex is built
   from a *set* of points and is permutation-invariant, so shuffling changes no
   diagram at all. A sonnet's volta is visible only as clustering, not position.
+- Do not compare poems with prose without matching segment length (fixed
+  2026-11-06). Shorter segments give longer H0 bars for mechanical reasons, so
+  the artifact is collinear with the claim and an uncontrolled comparison can
+  only "succeed". See Segmentation under Method decisions.
+- Do not apply the 25-point H1 floor to an H0 claim. It was raised against
+  sentence-level segmentation and withdrawn: the task-8 claim is H0-only, so
+  the binding constraint is the 4-point minimum in `src/3_embed_text.py`. The
+  floor is easy to over-apply.
+- Do not assume sentence-splitting fails on dash-punctuated verse. Tested
+  2026-11-06 over 943 poems including 446 of Dickinson's: only 0.4% contain no
+  `.!?` at all. Her style yields *few* sentences, not none — a precision
+  problem handled by a minimum sentence count, not a validity problem.
 - OPEN — dead ends Sungyeon has already ruled out: embedding models that were
   wrong for this text, filtrations that produced nothing, framings that got
   pushback. Without these I will re-propose them.

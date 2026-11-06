@@ -4,7 +4,7 @@ title: Build a same-author prose comparison corpus and test the poetry-spread cl
 status: To Do
 priority: high
 created: 2026-10-19
-updated: 2026-10-19
+updated: 2026-11-06
 labels: [phase-0, data, critical-path]
 depends_on: [task-3]
 ---
@@ -73,7 +73,8 @@ Implementation notes:
 
 - [ ] A prose corpus by Phase 0 poets is collected, with provenance and
       cleaning recorded (the same wrap-fragment care as PoetryDB).
-- [ ] The unit-matching rule is chosen and written down before results.
+- [x] The unit-matching rule is chosen and written down before results.
+      Done 2026-11-06: `backlog/docs/task-8-segmentation-rule.md`.
 - [ ] Poems and matched prose clouds are compared at matched point count on
       H0, under all three embedding models, and the outcome judged by the
       rule fixed in advance in `CLAUDE.md`: supported (all three), false
@@ -82,3 +83,49 @@ Implementation notes:
       prose segments, each against a shuffled-order control.
 - [ ] Findings written to `backlog/docs/`, stating plainly whether the claim
       survived.
+
+## Update 2026-11-06 — the segmentation rule is fixed (criterion 2 done)
+
+Settled before any prose was collected, because the segment-length artifact
+points the same way the claim does: shorter segments give longer H0 bars for
+mechanical reasons, so an uncontrolled comparison could only "succeed". Full
+reasoning in `backlog/docs/task-8-segmentation-rule.md`.
+
+Sungyeon raised the point that drove the design: a poem's line break is a
+partition imposed on a sentence that often runs past it, so the line is not the
+semantic unit. `scratch/sentence_probe.py` measured this over 121,544 lines —
+**68.0% of poem lines sit wholly inside a sentence**, 21.6% end at a boundary,
+10.4% straddle one. The premise holds, and it settles how prose is cut: because
+lineation is a sub-sentential partition of running syntax, cutting prose
+sub-sententially is the faithful analogue rather than a mutilation, and chunks
+are cut straight through sentence boundaries.
+
+The same probe killed the simple version of sentence-vs-sentence. Median
+sentences per poem, Dickinson excluded as the author cap will do anyway:
+refrain_song 15, irregular 12, ballad_stanza 7, **sonnet 4** — below the
+4-point minimum in `src/3_embed_text.py`.
+
+So **two co-primary comparisons**, not a test plus a robustness check:
+
+- **A, line level** — per poem, *n* distinct lines totalling *W* words, k =
+  round(W/n), and *n* × *k* words of that author's prose cut into *n* segments
+  of *k* words. Keeps all four arms.
+- **B, sentence level** — poem sentences against prose sentences, *n* matched,
+  poems with ≥ 8 sentences only, sonnets excluded by construction.
+
+Agreement is strong evidence; disagreement is reported as a finding, never
+resolved by keeping the friendlier number. A **lineation control** (same poem,
+same *k* and *n*, cut at the poet's line breaks vs cut blindly) separates
+"poetry's language is wider" from "poetry as presented is wider".
+
+Two objections raised in session and withdrawn, both recorded in `CLAUDE.md`
+under "Don't do this": the 25-point H1 floor does not bind an H0-only claim,
+and sentence-splitting does **not** fail on dash-punctuated verse — only 0.4%
+of 943 poems, including 446 of Dickinson's, contain no `.!?` at all.
+
+The probe used the first 40 authors alphabetically, not the Phase 0 sample.
+Rerun it against `data/processed/poetry_phase0_sample.parquet` once `data/` is
+regenerated, and amend the findings document if the arm medians move.
+
+Remaining: collect the prose corpus, wire EmbeddingGemma 2 in as a third
+`--model` key, then run A, B and the controls.
