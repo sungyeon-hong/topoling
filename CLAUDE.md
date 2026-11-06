@@ -66,6 +66,41 @@ prose under all three; **false** if longer under none; **model-dependent** if
 longer under one or two, which is reported as such and not counted as
 support.
 
+**Purpose of the poetry test, in Sungyeon's words (2026-11-06, verbatim):**
+
+> The ultimate goal of this test is to verify whether a poem (a specific genre
+> of my choice) carries some structural signals of novel expressions in
+> language via metaphors and connections between seemingly distant notions,
+> which may be contrasting from usual writing more focused on communication
+> (i.e., information transfer/exchange) as in essays and letters.
+
+**What a positive result would validate** (Sungyeon, 2026-11-06): the test is
+about the instrument. It asks whether persistent homology captures features of
+language use, such as how expressions are formed and how ideas and notions are
+connected. If it does for poetry, and specifically shows poetry as different
+from ordinary prose, that grounds the use of persistent homology on other,
+larger bodies of text such as academic papers, even though the analysis there
+would be corpus-level. That is the sense of "the shape of poetry".
+
+How the pieces fit:
+
+- **Poem against prose** shows *which direction* exploratory expression lies
+  in.
+- **Phase 0's displacement calibration curve** shows *how small* a move toward
+  convergence the instrument can detect.
+
+Both are needed before homogenisation can be diagnosed. Transfer to corpus
+level is still argued rather than shown until task-6 runs the corpus-level
+measurement on poetry.
+
+**How to word a positive result.** Poems differ from prose in more than
+metaphor: also in lineation, compression and register. A positive result shows
+that persistent homology registers a difference in expressive mode. Attributing
+that difference to metaphor and to connections between distant notions is the
+interpretation, partly supported by the lineation control. Write that the
+result is "consistent with" it, not that the instrument "measures novelty" or
+"detects metaphor".
+
 Sungyeon's reasoning: a poem is written differently from an ordinary
 description, with more metaphors and novel links connecting seemingly distant
 notions, which formal writing does not produce. Metaphor is the *explanation*;
@@ -187,9 +222,25 @@ Two **co-primary** comparisons, neither subordinate to the other:
   segments of *k* words. Matched word budget, granularity and point count. Keeps
   all four arms.
 - **B, sentence level.** Poem sentences against prose sentences, *n* matched,
-  poems with **≥ 8 sentences** only. Sonnets are excluded by construction
-  (median 4 sentences). Retains ~77% / 65% / 49% of refrain_song / irregular /
-  ballad_stanza.
+  poems with **≥ 8 sentences** only, **whatever their form**. Most sonnets
+  fall short (median 3 sentences), but a long one that clears the floor is in.
+  A is also run on exactly B's poems, so A against B is like for like.
+
+**Which poems** (selection rule, fixed 2026-11-06):
+
+- Poems are drawn **per poet from the whole PoetryDB corpus**, not from the
+  Phase 0 sample. The poetry forms are not a control parameter here; the pairing
+  with same-author prose is.
+- **12 poets** whose letters and essays are on Gutenberg.
+- Poems with **4–200 distinct lines**, **10 per poet**, **seed 20261106**, no
+  redraws.
+- **Only the poet's own prose**: no editors' material, co-written work or
+  quotation.
+- Per-poet persistence-diagram distributions are a descriptive layer; the
+  verdict stays with the paired mean.
+
+Details in `backlog/docs/task-8-segmentation-rule.md` and
+`backlog/docs/task-8-prose-sources.md`.
 
 Agreement across A and B is strong evidence. **Disagreement is a finding and is
 reported as one** — never resolved by keeping the friendlier number.
@@ -435,7 +486,10 @@ Sonnets 18, Barrett Browning 18).
 - Do not assume sentence-splitting fails on dash-punctuated verse. Tested
   2026-11-06 over 943 poems including 446 of Dickinson's: only 0.4% contain no
   `.!?` at all. Her style yields *few* sentences, not none — a precision
-  problem handled by a minimum sentence count, not a validity problem.
+  problem handled by a minimum sentence count, not a validity problem. On the
+  Phase 0 sample itself, 4 of her 11 poems have no `.!?`, so the ≥8 floor drops
+  all of her poems from sentence-level comparison B. That is the floor working
+  as intended, not a reason to change the splitter.
 - OPEN — dead ends Sungyeon has already ruled out: embedding models that were
   wrong for this text, filtrations that produced nothing, framings that got
   pushback. Without these I will re-propose them.

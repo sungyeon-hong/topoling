@@ -16,11 +16,12 @@ questions that decided how poems and prose are cut into points:
 Conclusions are in `backlog/docs/task-8-segmentation-rule.md`; this script
 exists so those numbers can be re-derived.
 
-**This is a probe, not pipeline code.** It samples the first N authors
-alphabetically rather than the Phase 0 stratified sample, because it was run
-before data/ was regenerated. Point it at the real sample when data/ exists --
-see `use_phase0_sample` below -- and amend the findings document if the arm
-medians move.
+**This is a probe, not pipeline code.** By default it samples the first N
+authors alphabetically. That was the first run, made before data/ was
+regenerated. With `--phase0-sample` it reads the Phase 0 stratified sample
+instead; that rerun (2026-11-06) is the authoritative one, and its figures are
+in the findings document. Per-poem rows go to scratch/output/sentence_probe.csv,
+which is gitignored and overwritten by each run.
 
 Responses are cached under scratch/data/, which is gitignored. Run from the
 project root:

@@ -77,8 +77,10 @@ Dickinson is excluded from this table. In the raw probe she is 50% of the
 ballad arm and 35% of irregular, and she halves both medians; the Phase 0
 sampler caps any author at five poems (`max_per_author=5` in
 `poetry_forms.stratified_sample`), so the excluded column is the better proxy
-for the sample that will actually be measured. The uncapped figures are in
-`scratch/sentence_probe.csv`.
+for the sample that will actually be measured. The per-poem rows from this
+alphabetical-slice run were not kept; the probe now writes to
+`scratch/output/sentence_probe.csv` (gitignored), which holds the Phase 0
+sample rerun below.
 
 ### Sentence-splitting verse is reliable
 
@@ -88,11 +90,150 @@ Dickinson, with 446 poems in the slice. Her dash-heavy punctuation does not
 make splitting *fail*; it makes it yield few units, which is a precision
 problem and is handled by the ≥8-sentence floor below, not a validity problem.
 
-## The rule
+*Qualified by the rerun below: within the Phase 0 sample, this holds for every
+author except Dickinson.*
+
+### Rerun on the Phase 0 sample (2026-11-06)
+
+The probe was rerun the same day against the sample that will actually be
+measured (`data/processed/poetry_phase0_sample.parquet`: 240 poems, 60 per arm,
+76 authors, at most five poems per author per arm), with
+`uv run python scratch/sentence_probe.py --phase0-sample`. No rule changed. The
+numbers below replace the indicative ones above wherever they differ.
+
+**The premise holds almost exactly.** Over 28,461 lines: 67.5% sit wholly
+inside a sentence, 21.2% end at a boundary, 11.3% straddle one (against 68.0 /
+21.6 / 10.4 on the alphabetical slice).
+
+**Sentence counts, the full sample.** Dickinson is in it, but only 11 poems,
+so no exclusion is needed:
+
+| arm | med. lines | med. sentences | poems with ≥8 sentences |
+|-|-|-|-|
+| refrain_song | 42 | 15.5 | 44 of 60 |
+| irregular | 48.5 | 13 | 38 of 60 |
+| ballad_stanza | 20 | 6 | **20 of 60** |
+| sonnet | 14 | **3** | 5 of 60 |
+
+What moved materially:
+
+- **Primary B is thinner than estimated.** It keeps 102 of the 180
+  non-sonnet poems (57%), not roughly two-thirds. The ballad_stanza arm is the
+  weak point: 20 poems, down from an estimated 49% retention.
+- **Sonnets now sit at a median of 3 sentences**, below the 4-point minimum
+  rather than at it. But **5 of 60 sonnets do reach 8 sentences**, so
+  "excluded by construction" is no longer literally true of the floor alone.
+  **OPEN for Sungyeon:** either drop the sonnet arm from B by rule, or admit
+  those 5. A 5-poem arm cannot carry a comparison, so dropping it is the
+  natural reading. Either way it has to be settled before B is run.
+- **Dickinson's punctuation does defeat splitting in the measured sample.** 4
+  of her 11 poems contain no `.!?` at all (these are the 4 of 240, 1.7%,
+  replacing the 0.4% above), and her median is 2 sentences. Splitting on
+  dashes as well would give 5–29 units per poem. Her maximum under the real
+  splitter is 6, so **the ≥8 floor removes all of her poems from Primary B**.
+  This does no harm, because the floor is doing the job it was set for. The
+  consequence for the corpus is that Dickinson prose (her letters) can only
+  serve Primary A.
+- **Michael Drayton is also flagged** (8 poems, median 2 sentences), but
+  correctly: his sonnets are long, fully punctuated periodic sentences, and a
+  14-line sonnet in two sentences is what the text actually contains. Five of
+  his eight are sonnets, which B excludes anyway.
+
+Mean line length per arm is 6.4–8.1 words, consistent with the 5.8–7.9 range
+quoted above. Sentence length within poems is 23–34 words.
+
+## Which poems and which prose: the selection rule
+
+Fixed by Sungyeon on 2026-11-06, before any prose was downloaded and before any
+poem was drawn. The inventory behind it is in `task-8-prose-sources.md`.
+
+**This replaces the Phase 0 sample as the source of poems.** In this
+comparison the four poetry forms (sonnet, refrain_song, ballad_stanza,
+irregular) are not a control parameter. The control is the pairing of each poem
+with its own author's prose. So poems are drawn **per poet from the whole
+PoetryDB corpus**. Form is recorded with every poem and reported as a covariate
+(described, never used to include or exclude). The probe figures above describe
+the Phase 0 sample. They show the scale of the segmentation problem, but they
+are not the retention figures for this comparison. Those come from the draw.
+
+1. **Poets.** The 12 first-pass poets: Shelley, Byron, Edward Thomas, Burns,
+   Robert Browning, Stevenson, Swinburne, Elizabeth Barrett Browning, Poe,
+   Whitman, Coleridge, Keats. Each has non-fiction prose of their own on
+   Project Gutenberg. Later additions are reported separately and never merged
+   silently into the first pass: Donne, Milton, Cowper, Brooke, Moore, Mary
+   Robinson, and Dickinson from a non-Gutenberg source. Edward Thomas is in, and
+   is also reported on his own, because his lyrical nature prose makes him the
+   most stringent pairing.
+2. **Eligible poems.**
+   - Wrap fraction at most 0.10, the existing rule (`MAX_WRAP_FRACTION` in
+     `src/poetry_forms.py`).
+   - **4 to 200 distinct lines.**
+   - The ceiling keeps a whole epic out of the draw. PoetryDB stores Byron's
+     *Don Juan* as one poem of 16,088 lines, and its matched prose would span
+     whole volumes. The ceiling also keeps a poem a single text rather than a
+     book.
+   - The eligible pool runs from 17 poems (Keats) to 247 (Shelley), 896 in
+     all.
+3. **The draw.**
+   - **10 poems per poet**, drawn uniformly at random from that poet's
+     eligible pool, with **seed 20261106**, the date the rule was fixed.
+   - **No redraws.** A drawn poem that later turns out to be unusable (for
+     example a duplicate, or a mislabelled translation) is replaced by the next
+     poem in the same seeded order, and the replacement is recorded.
+   - About 120 poems in all.
+4. **Prose: letters and essays only.** No fiction, no drama, no "prose poems"
+   (Poe's *Eureka*). Prose is tagged *personal* (letters, journals, travel,
+   memoir) or *argued* (essays, criticism, prefaces, treatises), and the two are
+   reported separately as already set out under "Prose register" below.
+5. **Authorship: only the poet's own prose, written alone.** Before any segment
+   is cut, remove:
+   - **text by other hands:** editors' footnotes, introductions and linking
+     narrative, and letters *to* the poet;
+   - **co-written works:** Shelley's *Six Weeks' Tour* is excluded;
+   - **speech transcribed by others:** Coleridge's *Table Talk* is excluded;
+   - **all quotation, verse quotation above all:** Swinburne quoting
+     Shakespeare, Poe quoting *The Raven*. Verse inside the prose arm would blur
+     the very contrast under test.
+
+   In a two-writer collection (the Browning–Barrett letters), each poet's poems
+   are matched only with that poet's own letters.
+6. **Matching passages.**
+   - Each poem gets its own passage of its poet's prose, **never overlapping**
+     another poem's passage.
+   - The passage starts at a random offset under the same seed, never at a
+     work's opening, and never inside front matter or editors' material.
+   - Record the work, the offset and the register with every match.
+7. **Analysis carried with the draw.**
+   - Comparison B admits **every** drawn poem with at least 8 sentences,
+     whatever its form, sonnets included.
+   - Comparison A runs twice: on all drawn poems, and on **exactly B's poems**,
+     so that A against B is like for like.
+   - Results are reported per poet, with a leave-one-poet-out check: rerun
+     dropping each poet in turn.
+
+### Descriptive layer: per-poet persistence diagrams
+
+Sungyeon's picture of the analysis (2026-11-06): for each poet, set the
+distribution of topological features of their poems against that of their
+prose.
+
+- **Each poem, and each prose match, stays its own cloud** with its own
+  diagram. Never pool a poet's poems into one cloud: that would mix distances
+  within a poem with distances between poems, which is the
+  document-level/corpus-level conflation `CLAUDE.md` warns against.
+- Per poet, **compare the distribution of H0 bar lengths** across the 10 poem
+  diagrams with the same for the 10 prose diagrams: one panel per poet, poems
+  against prose. This is likely the figure that shows the result.
+- **This layer describes; it does not decide.** The verdict is reached only by
+  the rule fixed earlier: the paired mean H0 lifetime, across three models. A
+  difference in distribution shape with no difference in the mean is reported
+  as what it is.
+
+## The cutting rule
 
 ### Primary A — line level, word-matched prose
 
-For each poem in the Phase 0 sample:
+For each selected poem:
 
 1. Take its **distinct** lines after wrap-fragment filtering (`verse_lines` in
    `src/3_embed_text.py`). Call that count *n*, and their total word count *W*.
@@ -123,13 +264,19 @@ rather than as the test.
 ### Primary B — sentence level, sentence against sentence
 
 Poem sentences against prose sentences by the same author, *n* matched,
-restricted to poems with **at least 8 sentences**. Sonnets are excluded by
-construction and this is stated up front, not discovered afterwards.
+restricted to poems with **at least 8 sentences**, whatever their form. Most
+sonnets fall below the floor (median 3 sentences in the Phase 0 sample), but
+a long one that clears it is admitted. Amended 2026-11-06: this originally
+read "sonnets are excluded by construction", which treated form as a criterion
+when only point count is.
 
 A and B are **co-primary, not test-and-robustness-check**. Neither dominates:
-A keeps all four arms and all 240 poems but compares a crafted unit against a
-mechanical one; B compares two natural units but loses an arm and roughly a
-third of the rest. Agreement between them is strong evidence. **Disagreement is
+A keeps every selected poem but compares a crafted unit against a mechanical
+one; B compares two natural units but loses the poems with fewer than 8
+sentences (43% of the non-sonnets in the Phase 0 sample; the real figure comes
+from the draw). Because they then cover different poems, **A is also run on
+exactly B's poems**, and it is that run that is set against B. Agreement
+between them is strong evidence. **Disagreement is
 itself a finding and gets reported as one** — it must not be resolved by
 keeping whichever number is friendlier.
 
@@ -210,10 +357,9 @@ over-apply.
 
 ## Caveats on these numbers
 
-- The probe uses the **first 40 authors alphabetically**, not the Phase 0
-  stratified sample. It is indicative. Rerun `scratch/sentence_probe.py` against
-  `data/processed/poetry_phase0_sample.parquet` once `data/` is regenerated, and
-  amend this document if the arm medians move materially.
+- The first probe used the **first 40 authors alphabetically**. It was rerun on
+  the Phase 0 sample the same day. See "Rerun on the Phase 0 sample" above,
+  whose figures take precedence.
 - The **≥8-sentence floor is a judgement call**. It sits above the pipeline's
   4-point minimum and well below the 25-point H1 floor, which does not apply to
   an H0 claim. H0 on 8 points is 7 finite bars: thin, but measurable.
@@ -223,6 +369,13 @@ over-apply.
 
 ## Status
 
-Decided and written down. Nothing has been measured. Next in task-8: collect the
-prose corpus, and wire EmbeddingGemma 2 into `src/embedding.py` as a third
-`--model` key.
+**Fully specified as of 2026-11-06.** The cutting rule, the selection rule and
+the descriptive layer are all fixed. No poem has been drawn, no prose
+downloaded and no H0 measured. The sonnet question is settled: form is not a
+criterion.
+
+Next in task-8:
+
+1. Run the seeded draw.
+2. Download and clean the 12 poets' prose under the authorship rule.
+3. Wire EmbeddingGemma 2 into `src/embedding.py` as a third `--model` key.

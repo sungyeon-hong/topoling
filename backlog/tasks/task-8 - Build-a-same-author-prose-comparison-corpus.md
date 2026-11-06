@@ -127,5 +127,50 @@ The probe used the first 40 authors alphabetically, not the Phase 0 sample.
 Rerun it against `data/processed/poetry_phase0_sample.parquet` once `data/` is
 regenerated, and amend the findings document if the arm medians move.
 
-Remaining: collect the prose corpus, wire EmbeddingGemma 2 in as a third
-`--model` key, then run A, B and the controls.
+## Update 2026-11-06 (later) — probe rerun on the Phase 0 sample
+
+Done. The findings document has a new section, "Rerun on the Phase 0 sample".
+The premise holds (67.5% of lines inside a sentence). Three things moved:
+
+- B keeps **102 of 180** non-sonnet poems (refrain_song 44, irregular 38,
+  ballad_stanza **20**), not the roughly two-thirds estimated. The ballad arm is
+  thin.
+- Sonnets now have a median of **3** sentences, but **5 of 60 reach 8**.
+  **OPEN for Sungyeon:** drop the sonnet arm from B by rule, or admit the 5.
+  This must be settled before B runs.
+- All 11 of Dickinson's sample poems fall below the floor, and 4 have no
+  `.!?`, so her letters can serve comparison A only. This bears on which
+  prose to collect.
+
+Remaining: decide the sonnet question; collect the prose corpus; wire
+EmbeddingGemma 2 in as a third `--model` key; then run A, B and the controls.
+
+## Update 2026-11-06 (end of session): poets, not arms
+
+Sungyeon decided the following:
+
+- **Poets, not arms.** The poetry forms are not a control parameter in this
+  comparison. The sonnet question is settled: poems with at least 8 sentences
+  enter B whatever their form.
+- **A also runs on exactly B's poems**, so A against B is like for like.
+- **Prose may come from any PoetryDB poet**, so poems are drawn per poet from
+  the whole corpus rather than from the Phase 0 sample.
+- **Letters and essays only**: no fiction, no drama.
+- **A cap of 10 poems per poet**, with results reported per poet and a
+  leave-one-poet-out check.
+- **First pass on 12 poets** whose prose is on Gutenberg. Dickinson is
+  deferred, because her letters are not on Gutenberg. Edward Thomas is in, and
+  also reported separately.
+
+The inventory and every decision are in `backlog/docs/task-8-prose-sources.md`.
+
+Remaining:
+
+1. ~~Write the selection rule.~~ Done the same day: poems with 4–200 distinct
+   lines, 10 per poet, seed 20261106, only the poet's own prose, and per-poet
+   diagram distributions as a descriptive layer. See the segmentation-rule
+   document.
+2. Run the seeded draw.
+3. Download and clean the 12 poets' prose.
+4. Wire in EmbeddingGemma 2.
+5. Run A, B and the controls.
