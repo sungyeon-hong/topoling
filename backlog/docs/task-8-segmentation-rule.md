@@ -164,6 +164,10 @@ are not the retention figures for this comparison. Those come from the draw.
    Robinson, and Dickinson from a non-Gutenberg source. Edward Thomas is in, and
    is also reported on his own, because his lyrical nature prose makes him the
    most stringent pairing.
+   **Burns** is also reported on his own (added 2026-11-06, at the draw). His
+   poems are largely in Scots and his letters in standard English. Dialect
+   words may be placed idiosyncratically by the embedding model, which would
+   push his poems' spread in the same direction as the claim.
 2. **Eligible poems.**
    - Wrap fraction at most 0.10, the existing rule (`MAX_WRAP_FRACTION` in
      `src/poetry_forms.py`).
@@ -236,7 +240,10 @@ prose.
 For each selected poem:
 
 1. Take its **distinct** lines after wrap-fragment filtering (`verse_lines` in
-   `src/3_embed_text.py`). Call that count *n*, and their total word count *W*.
+   `src/3_embed_text.py`), **and after dropping lines that are only a section
+   numeral** ("XIII", "4."). Those are headings, not verse; added 2026-11-06,
+   see `task-8-poem-draw.md`. Call that count *n*, and their total word count
+   *W*.
    Distinct rather than raw, because `dedup()` in `src/5_compute_ph.py` is what
    the diagram actually sees — the same rule the project already applies to
    cardinality everywhere else.
@@ -376,6 +383,6 @@ criterion.
 
 Next in task-8:
 
-1. Run the seeded draw.
+1. ~~Run the seeded draw.~~ Done 2026-11-06: `task-8-poem-draw.md`.
 2. Download and clean the 12 poets' prose under the authorship rule.
 3. Wire EmbeddingGemma 2 into `src/embedding.py` as a third `--model` key.

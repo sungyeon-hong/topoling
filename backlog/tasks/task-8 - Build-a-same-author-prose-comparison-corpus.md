@@ -170,7 +170,12 @@ Remaining:
    lines, 10 per poet, seed 20261106, only the poet's own prose, and per-poet
    diagram distributions as a descriptive layer. See the segmentation-rule
    document.
-2. Run the seeded draw.
+2. ~~Run the seeded draw.~~ Done the same day. 120 poems; 7 replaced after
+   inspection (2 misattributed, 1 duplicate, 4 translations); Burns added to
+   the poets reported separately; numeral-only lines to be dropped before
+   cutting. Comparison B covers 55 of the 120. See
+   `backlog/docs/task-8-poem-draw.md`. The Phase 0 sample issues found along
+   the way are task-9.
 3. Download and clean the 12 poets' prose.
 4. Wire in EmbeddingGemma 2.
 5. Run A, B and the controls.

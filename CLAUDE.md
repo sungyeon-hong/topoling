@@ -233,7 +233,7 @@ Two **co-primary** comparisons, neither subordinate to the other:
   with same-author prose is.
 - **12 poets** whose letters and essays are on Gutenberg.
 - Poems with **4–200 distinct lines**, **10 per poet**, **seed 20261106**, no
-  redraws.
+  redraws. Drawn 2026-11-06: `backlog/docs/task-8-poem-draw.md`.
 - **Only the poet's own prose**: no editors' material, co-written work or
   quotation.
 - Per-poet persistence-diagram distributions are a descriptive layer; the
@@ -342,6 +342,7 @@ Phase 1 (arXiv) is untouched. Nothing here is publication-track.
 | src/collect_poetrydb_pilot.py | Superseded by collect_poetrydb_corpus.py. Kept for provenance of the 100-poem pilot. |
 | src/collect_poetrydb_corpus.py | **Works (2026-09-07).** Full corpus, 3092 poems / 129 authors. Fetches per author, falls back to per-title when a bulk payload 503s (Byron 324 poems, Shelley 312), caches per author so a rerun is free. |
 | src/poetry_forms.py | **Works (2026-09-07).** Mechanical form detection and stratified sampling. Importable, unlike the digit-prefixed scripts, so steps 3-5 can use it. |
+| src/draw_task8_poems.py | **Works (2026-11-06).** task-8's seeded poem draw: 10 per poet, seed 20261106, exclusions listed in the script with reasons. Writes the public record `backlog/docs/task-8-poem-draw.csv`. |
 | scratch/collect_arxiv_pilot.py | Works, and is the *better* collector — version stripping, dedup, 21-column schema, run summary. |
 | main.py | uv init boilerplate. Not an entry point. |
 | notebooks/poetry_db.md | Notes on three poetry corpus options (PoetryDB / Gutendex / Gutenberg Poetry Corpus). No notebooks yet. |
