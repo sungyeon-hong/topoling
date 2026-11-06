@@ -83,6 +83,34 @@ def is_verse(par) -> bool:
     return max(map(len, stripped)) < 55 and capitalised / len(par) >= 0.75
 
 
+def join_lines(par) -> str:
+    """Join a paragraph's lines. A line ending in a single hyphen is a
+    compound broken at the line end ("anti-" / "ministerial"): join without
+    a space. A line ending in "--" is a dash and keeps its space."""
+    out = ""
+    for l in (l.strip() for l in par):
+        if out.endswith("-") and not out.endswith("--"):
+            out += l
+        else:
+            out = f"{out} {l}" if out else l
+    return out
+
+
+ENGLISH_FUNCTION = set("""the of and to a in that is it was for with as he his be by
+not this which but are or have from at on an they their i my we you had were
+all so been there would what no if more its than""".split())
+
+
+def mostly_english(text: str, floor: float = 0.15) -> bool:
+    """Is this paragraph English prose? English runs at about 0.4 function
+    words per token; the Latin and German passages essays quote run 0.01-0.08.
+    Very short paragraphs are given the benefit of the doubt."""
+    words = re.findall(r"[a-z]+", text.lower())
+    if len(words) < 15:
+        return True
+    return sum(w in ENGLISH_FUNCTION for w in words) / len(words) >= floor
+
+
 # --------------------------------------------------------------------------
 # Letter editions. The extraction logic is shared; each edition supplies its
 # own heading pattern, end markers and fallback indent, learned by reading it.
@@ -189,7 +217,7 @@ class LetterEdition:
                 continue
             if not lo <= indent(p) <= lo + 1 or is_verse(p):
                 continue                     # editor's text, quotation, verse
-            text = " ".join(l.strip() for l in p)
+            text = join_lines(p)
             if self.SIGNATURE.match(text) or re.fullmatch(r"\[[^\]]*\]\.?", text):
                 continue                     # signature; editor's address line
             if not re.search(r"[a-z]", text):
@@ -463,7 +491,63 @@ class BrowningBarrett(LetterEdition):
             yield u
 
 
-class KenyonEBB(LetterEdition):
+class EditorNarrated(LetterEdition):
+    """Editions whose editor's narrative runs between the letters at the
+    letters' own indentation, so only voice separates the two.
+
+    Editor's paragraphs before any of the writer's own text (a note placed
+    after the heading, introducing the letter) are skipped; after the
+    writer's text has begun, the first editor's paragraph ends the letter.
+
+    A paragraph is the editor's if it uses the edition's NARRATIVE phrasing,
+    or has no I, you or we of its own and refers to the subject in the third
+    person (ABOUT). Quotations are set aside first, since editors quote the
+    letters. Once the editor's voice appears, the rest of the span up to the
+    next heading is dropped: the narrative runs on to introduce the next
+    letter, and documents the editor quotes in full sit inside it.
+    """
+
+    FIRST_SECOND = re.compile(r"\b(I|me|my|mine|myself|you|your|yours|yourself|"
+                              r"we|us|our|ours|ourselves)\b", re.I)
+    QUOTED = re.compile(r"(['\"\u2018\u201c])[^'\"\u2018\u2019\u201c\u201d]{0,400}?['\"\u2019\u201d]")
+    NARRATIVE = None
+    ABOUT = None
+
+    def __init__(self, gid, label):
+        super().__init__(gid, label)
+        self._ordinal = None
+
+    @classmethod
+    def editorial(cls, text) -> bool:
+        own = cls.QUOTED.sub(" ", text)
+        if cls.NARRATIVE.search(own):
+            return True
+        return not cls.FIRST_SECOND.search(own) and bool(cls.ABOUT.search(own))
+
+    def clean(self, paras):
+        out = []
+        for t in super().clean(paras):
+            if self.editorial(t):
+                if not out:
+                    continue                 # editor's note before the letter
+                break
+            if re.match(r"\((Endorsed|Address|Addressed|Postmark)", t):
+                continue                     # editor's transcriptions
+            out.append(t)
+        return out
+
+    def unit_id(self, head, lines, at):
+        if self._ordinal is None:
+            pos = [i for i, l in enumerate(lines) if self.HEAD.match(l)]
+            self._ordinal = {i: n for n, i in enumerate(pos, 1)}
+        return f"{self.label}-{self._ordinal[at]:03d}"
+
+    def units(self):
+        self._ordinal = None
+        yield from super().units()
+
+
+class KenyonEBB(EditorNarrated):
     """The Letters of Elizabeth Barrett Browning, ed. Frederic G. Kenyon
     (2 vols, 1897).
 
@@ -492,15 +576,10 @@ class KenyonEBB(LetterEdition):
     SIGNATURE = re.compile(
         r"^\s*(BA|E\. ?B\. ?B\.?|ELIBET|ELIZABETH B(\.|ARRETT)? (BARRETT|BROWNING)|"
         r"ELIZABETH BARRETT BROWNING|E\. ?B\. ?(BARRETT|BROWNING))[.,-]*\s*$")
-    # Her voice: first or second person, including "we/us/our" (she writes
-    # as half of a couple; Kenyon writes about "the Brownings").
-    FIRST_SECOND = re.compile(r"\b(I|me|my|mine|myself|you|your|yours|yourself|"
-                              r"we|us|our|ours|ourselves)\b", re.I)
     # Kenyon's subject: her, in the third person, or her letters and books.
-    ABOUT_HER = re.compile(r"\b(she|her|hers|herself|Miss Barrett|Mrs\. Browning|"
+    ABOUT = re.compile(r"\b(she|her|hers|herself|Miss Barrett|Mrs\. Browning|"
                            r"Mr\. Browning|the Brownings|Elizabeth Barrett|"
                            r"letters?|volumes?|correspondence)\b")
-    QUOTED = re.compile(r"(['\"\u2018\u201c])[^'\"\u2018\u2019\u201c\u201d]{0,400}?['\"\u2019\u201d]")
     # Kenyon's narrative phrasing, his even when he writes "I" or "we" or
     # quotes her. She writes "call me Miss Barrett", never the possessive.
     NARRATIVE = re.compile(r"\b(Miss Barrett's|Mrs\. Browning's|Elizabeth Barrett's|"
@@ -513,48 +592,144 @@ class KenyonEBB(LetterEdition):
                            r"|(?:^|[.!?;]\s+|\b(?:But|And|Yet|Here|There)\s+)"
                            r"(?:Mrs\. Browning|Miss Barrett)\b")
 
-    def __init__(self, gid, label):
+
+
+class EHColeridge(EditorNarrated):
+    """Letters of Samuel Taylor Coleridge, ed. Ernest Hartley Coleridge
+    (2 vols, 1895).
+
+    - Headings: "XII. TO ANNE EVANS."; "TO THE SAME." means the previous
+      recipient.
+    - Body flush left; closings, signatures and quoted verse indented.
+    - The editor's narrative opens each chapter and occasionally runs
+      between letters at the body's indentation ("In the diary of his voyage
+      on the Speedwell Coleridge records..."), hence the voice filter. His
+      own postscripts also follow the signature.
+    - Footnotes are collected after the index at the back of each volume;
+      the letters end at "INDEX".
+    - Adult prose only: Coleridge turned 18 on 21 October 1790. Vol. 1
+      letters VI (February 1785, from Christ's Hospital) and VII (undated,
+      "before 1790") are excluded; VIII (October 1791) is the first kept.
+    """
+
+    HEAD = re.compile(r"^([IVXLC]+)\. TO (.+?)\.?(?:\[\d+\])?\s*$")
+    STOP = re.compile(r"^CHAPTER\b")
+    END = re.compile(r"^INDEX\s*$")
+    SEP = None
+    # The editor speaks of "Coleridge" in the third person; Coleridge's own
+    # mentions are of Mrs., Sara, Hartley, Derwent or Berkeley Coleridge.
+    # Nor is "S. T. Coleridge" or "Mr. Coleridge", which is how he signs and
+    # how letters to him are addressed.
+    _HIM = (r"(?<!Mrs\. )(?<!Sara )(?<!Hartley )(?<!Derwent )(?<!Berkeley )"
+            r"(?<!Nelson )(?<!George )(?<!James )(?<!Edward )(?<!T\. )(?<!Mr\. )"
+            r"Coleridge")
+    NARRATIVE = re.compile(
+        _HIM + r"(?:'s|\u2019s|\s+(?:records|writes|wrote|says|said|had|was|"
+        r"seems|left|returned|went|spent|tells|describes|refers|alludes))\b"
+        r"|\b(?:above|following|preceding) letters?\b|\bletters? which follows?\b"
+        # sentence-opening: a full stop after a capital initial ends no sentence
+        r"|(?:^|(?<![A-Z])[.!?;]\s+)" + _HIM + r"\b")
+    # Not "he/his": Coleridge writes "he" about others constantly, and a
+    # misfire costs the rest of the letter. The editor's subject is
+    # "Coleridge" or the documents themselves.
+    ABOUT = re.compile(r"\b(" + _HIM + r"|transcript|MSS?\.|original|"
+                       r"the letter|these letters|diary)\b")
+
+    def __init__(self, gid, label, juvenile=()):
         super().__init__(gid, label)
-        self._ordinal = None
+        self.juvenile = set(juvenile)
 
-    @classmethod
-    def editorial(cls, text) -> bool:
-        """Kenyon's voice: about her in the third person, with no I, you or
-        we of its own.
-
-        Quotations are set aside first, since Kenyon quotes her letters. A
-        paragraph with no pronoun of her own voice is editorial only if it
-        also refers to her, her letters or her books; her own impersonal
-        lines ("The weather is wonderfully warm.") are kept.
-        """
-        own = cls.QUOTED.sub(" ", text)
-        if cls.NARRATIVE.search(own):
-            return True
-        return not cls.FIRST_SECOND.search(own) and bool(cls.ABOUT_HER.search(own))
-
-    def clean(self, paras):
-        # Once Kenyon's voice appears, the rest of the span is his: his
-        # narrative runs on to introduce the next letter, and the documents
-        # he quotes in full (Thackeray's letter to her, Miss Mitford's
-        # recollections) sit inside it, in the first person.
-        out = []
-        for t in super().clean(paras):
-            if self.editorial(t):
-                break
-            if re.match(r"\((Endorsed|Address|Addressed|Postmark)", t):
-                continue                     # Kenyon's transcriptions
-            out.append(t)
-        return out
-
-    def unit_id(self, head, lines, at):
-        if self._ordinal is None:
-            pos = [i for i, l in enumerate(lines) if self.HEAD.match(l)]
-            self._ordinal = {i: n for n, i in enumerate(pos, 1)}
-        return f"{self.label}-{self._ordinal[at]:03d}"
+    def keep(self, head):
+        return head.group(1) not in self.juvenile
 
     def units(self):
-        self._ordinal = None
-        yield from super().units()
+        # Resolve "THE SAME" to the previous named recipient. Every heading
+        # counts, including excluded juvenile letters, since "THE SAME" can
+        # refer back to one; ordinals match EditorNarrated.unit_id.
+        lines = fetch(self.gid).split("\n")
+        h0 = next(i for i, l in enumerate(lines) if self.HEAD.match(l))
+        end = next((i for i, l in enumerate(lines[h0:], h0) if self.END.match(l)),
+                   len(lines))
+        names, last = [], None
+        for l in lines[:end]:
+            m = self.HEAD.match(l)
+            if m:
+                r = m.group(2).strip()
+                last = last if re.match(r"THE SAME\b", r, re.I) else r
+                names.append(last)
+        for u in super().units():
+            n = int(u["unit"].rsplit("-", 1)[1])
+            yield {**u, "recipient": names[n - 1]}
+
+
+class Biographia(LetterEdition):
+    """Coleridge, Biographia Literaria (1817), Gutenberg 6081.
+
+    Essay chapters, not letters, but the same machinery applies: a unit runs
+    from one heading to the next. No editor stands between Coleridge and the
+    reader here; the risk is quotation.
+
+    - Units are "CHAPTER I" ... "CHAPTER XXIV", plus "LETTER I-III" of
+      Satyrane's Letters (between XXII and XXIII): travel letters from
+      Germany, so tagged personal rather than argued.
+    - Each chapter opens with a topic summary in dashes ("Motives to the
+      present work--Reception of the Author's first publication--..."):
+      an outline, not prose, so it is dropped.
+    - Coleridge's own footnotes are collected after Chapter XXIV under
+      "FOOTNOTES"; the units end there. Footnotes are a different kind of
+      writing from the running argument and are left out.
+    - Set-off quotation is indented and dropped by the indent rule. But
+      Latin and German passages, and some quotations, sit flush left:
+      non-English paragraphs are dropped by `mostly_english`; a quotation
+      opening a paragraph is cut, keeping his continuation, and a paragraph
+      whose opening quotation never closes (one paragraph of a longer
+      quotation) is dropped whole. This drops the "letter from a friend" in
+      Chapter XIII, which Coleridge wrote himself but presents as a
+      quotation. "TRANSLATION." paragraphs (his renderings of others'
+      words) are dropped.
+    - The German epigraph and its translation precede Chapter I and so fall
+      outside every unit.
+    """
+
+    HEAD = re.compile(r"^(CHAPTER|LETTER) ([IVXLC]+)\s*$")
+    END = re.compile(r"^FOOTNOTES\s*$")
+    SEP = None
+    OPEN, CLOSE = "\"\u201c", "\"\u201d"
+
+    def unit_id(self, head, lines, at):
+        kind = "satyrane" if head.group(1) == "LETTER" else "ch"
+        return f"{self.label}-{kind}-{head.group(2)}"
+
+    def units(self):
+        for u in super().units():
+            personal = "-satyrane-" in u["unit"]
+            yield {**u, "recipient": None,
+                   "register": "personal" if personal else "argued"}
+
+    def clean(self, paras):
+        # The chapter summary: first paragraph, dash-separated topics, flush.
+        # (Chapter XIII's has no dashes: "On the imagination, or esemplastic
+        # power". A very short first line is a summary too.)
+        first = " ".join(paras[0]) if paras else ""
+        if paras and ((("--" in first and not re.search(r"\bI\b", first)
+                        and len(first.split()) <= 90) or len(first.split()) <= 12)):
+            paras = paras[1:]
+        out = []
+        for t in super().clean(paras):
+            if not out:                      # place heading fused on: "RATZEBURG. No little..."
+                t = re.sub(r"^[A-Z]{3,}[A-Z ,]*\.\s+", "", t)
+            if t.startswith("TRANSLATION") or not mostly_english(t):
+                continue
+            if t[:1] in self.OPEN:
+                close = min((i for i in (t.find(c, 1) for c in self.CLOSE) if i > 0),
+                            default=-1)
+                if close < 0:
+                    continue                 # inside a multi-paragraph quotation
+                t = t[close + 1:].strip(" ,;:.-\u2014")
+                if len(t.split()) < 5:
+                    continue
+            out.append(t)
+        return out
 
 
 # --------------------------------------------------------------------------
@@ -585,6 +760,12 @@ SOURCES = [
      "personal", KenyonEBB(13018, "kenyon1")),
     ("Elizabeth Barrett Browning", 16646, "The Letters of EBB, vol. 2 (ed. Kenyon)",
      "personal", KenyonEBB(16646, "kenyon2")),
+    ("Samuel Coleridge", 44553, "Letters of S. T. Coleridge, vol. 1 (ed. E. H. Coleridge)",
+     "personal", EHColeridge(44553, "stc1", juvenile=("VI", "VII"))),
+    ("Samuel Coleridge", 44554, "Letters of S. T. Coleridge, vol. 2 (ed. E. H. Coleridge)",
+     "personal", EHColeridge(44554, "stc2")),
+    ("Samuel Coleridge", 6081, "Biographia Literaria",
+     "argued", Biographia(6081, "biographia")),
 ]
 
 

@@ -177,12 +177,14 @@ Remaining:
    `backlog/docs/task-8-poem-draw.md`. The Phase 0 sample issues found along
    the way are task-9.
 3. Download and clean the 12 poets' prose. **In progress:** Byron, Keats,
-   Burns and both Brownings done (1,768 letters, about 983,000 words;
+   Burns, both Brownings and Coleridge done (2,052 units, about 1,293,000 words;
    `src/prose_corpus.py`, `backlog/docs/task-8-prose-cleaning.md`). Adult
    prose only; matched by author, not period. Burns's letters are standard
    English while his drawn poems average 3.1% Scots words. The Browning
    correspondence is split by printed direction headings; Kenyon's edition of
    E. B. Browning needed a voice filter, because his narrative shares her
-   letters' indentation. Seven poets to go.
+   letters' indentation; Coleridge's letters needed it too, and his
+   *Biographia* is the first argued (essay) source, where quotation replaces
+   the editor as the main risk. Six poets to go.
 4. Wire in EmbeddingGemma 2.
 5. Run A, B and the controls.

@@ -10,19 +10,24 @@ Code: `src/prose_corpus.py`, one extractor per edition. Output:
 `uv run python src/prose_corpus.py`; downloads are cached in
 `data/raw/prose/gutenberg/`.
 
-**Status (2026-11-06):** Byron, Keats, Burns and both Brownings done. 1,768
-letters, about 983,000 words.
+**Status (2026-11-06):** Byron, Keats, Burns, both Brownings and Coleridge
+done. 2,052 units (letters, essay chapters), about 1,293,000 words. Coleridge
+is the first poet with both registers: letters (*personal*) and the
+*Biographia Literaria* (*argued*).
 
-| poet | edition | letters | words |
-|-|-|-|-|
-| Byron | Prothero, vol. 1 (adult letters only) | 122 | 45,854 |
-| Byron | Prothero, vol. 2 | 210 | 50,227 |
-| Keats | Colvin, *Letters to His Family and Friends* | 164 | 108,139 |
-| Keats | Buxton Forman, *Letters to Fanny Brawne* | 37 | 12,200 |
-| Burns | Logie Robertson, *The Letters of Robert Burns* | 268 | 104,656 |
-| Robert Browning | *Letters of RB and EBB*, vols 1–2 (his letters only) | 286 | 160,630 |
-| E. B. Browning | *Letters of RB and EBB*, vols 1–2 (her letters only) | 287 | 222,780 |
-| E. B. Browning | Kenyon, *Letters of EBB*, vols 1–2 | 394 | 278,835 |
+| poet | edition | register | units | words |
+|-|-|-|-|-|
+| Byron | Prothero, vol. 1 (adult letters only) | personal | 122 | 45,854 |
+| Byron | Prothero, vol. 2 | personal | 210 | 50,227 |
+| Keats | Colvin, *Letters to His Family and Friends* | personal | 164 | 108,139 |
+| Keats | Buxton Forman, *Letters to Fanny Brawne* | personal | 37 | 12,200 |
+| Burns | Logie Robertson, *The Letters of Robert Burns* | personal | 268 | 104,656 |
+| Robert Browning | *Letters of RB and EBB*, vols 1–2 (his letters only) | personal | 286 | 160,630 |
+| E. B. Browning | *Letters of RB and EBB*, vols 1–2 (her letters only) | personal | 287 | 222,780 |
+| E. B. Browning | Kenyon, *Letters of EBB*, vols 1–2 | personal | 394 | 278,835 |
+| Coleridge | E. H. Coleridge, *Letters*, vols 1–2 (adult only) | personal | 257 | 198,731 |
+| Coleridge | *Biographia Literaria*, chapters | argued | 24 | 94,938 |
+| Coleridge | *Biographia Literaria*, Satyrane's Letters | personal | 3 | 16,099 |
 
 **Decisions (Sungyeon, 2026-11-06):**
 
@@ -341,6 +346,96 @@ still one poet with a cap of 10 poems, so the amount of prose changes nothing
 in the comparison. It only gives more room to place each poem's matched
 passage.
 
+## Coleridge
+
+Done 2026-11-06.
+
+### *Letters of Samuel Taylor Coleridge*, ed. Ernest Hartley Coleridge (2 vols, 1895)
+
+Gutenberg 44553 and 44554.
+
+- **Headings:** "XII. TO ANNE EVANS.". "TO THE SAME." is resolved to the
+  previous named recipient.
+- **Layout:** the body is flush left; closings, signatures and quoted verse
+  are indented. Footnotes are collected after each volume's index, and the
+  letters end at "INDEX".
+- **Adult prose only:** Coleridge turned 18 on 21 October 1790. Letters VI
+  (February 1785, from Christ's Hospital, aged 12) and VII (undated, "before
+  1790") are excluded. Letter VIII (October 1791) is the first kept.
+- **The editor writes between letters, at the body's indentation, as Kenyon
+  did,** but rarely. Examples: "In the diary of his voyage on the Speedwell
+  Coleridge records..." and "The origin of Coleridge's friendship with
+  Thomas Allsop...". The voice filter is now a shared base class,
+  `EditorNarrated`, with each edition supplying its own narrative and
+  subject patterns. Kenyon's output was byte-identical after the refactor.
+- **Three tunings came from auditing it on Coleridge:**
+  - *His own name.* In "S. T. Coleridge" and "Mr. Coleridge", the full stop
+    of an initial made the name look like a sentence opening with "Coleridge",
+    which is narration. Five of his own letters (to Southey, his wife, Davy)
+    were lost. Now "Coleridge" after "S. T." or "Mr." does not count, and a
+    full stop after a capital initial ends no sentence.
+  - *Editor's notes before a letter.* The note introducing the Allsop letter
+    sits after the heading, before the letter. Truncating there lost the
+    letter. Editor's paragraphs before any of the writer's own text are now
+    skipped instead; this changed nothing in Kenyon.
+  - *"He" is not narration here.* Coleridge writes "he" about other people
+    constantly ("On this ruinous plan poor Southey has been toiling..."), so
+    "he/his" made ten of his own paragraphs look like the editor's, and each
+    misfire cut the rest of its letter. The editor's subject is now only
+    "Coleridge" in the third person, or the documents themselves
+    ("transcript", "MS.", "original").
+- **Final audit:**
+  - **every heading accounted for:** vol. 1 has 143 headings, giving 141
+    letters (the 2 juvenile letters excluded); vol. 2 has 116, giving 116;
+  - the filter flags exactly three paragraphs, all the editor's, and removes
+    973 words in all;
+  - every kept mention of "Coleridge" is his own (his family, his son's name,
+    his address);
+  - Coleridge's own playful third-person note ("Mr. S. T. Coleridge, F. R. S.
+    L. ... has the honour") is kept: unlike Elizabeth Barrett Browning's
+    Westwood note, it is now recognised as his.
+
+### *Biographia Literaria* (1817)
+
+Gutenberg 6081. The first essay source: **no editor stands between Coleridge
+and the reader, and the risk shifts to quotation.**
+
+- **Units:** chapters I–XXIV (*argued*), plus the three Satyrane's Letters
+  between XXII and XXIII. Those are travel letters from Germany, so they are
+  tagged *personal*. Registers are now set per unit, not only per edition.
+- **Dropped:**
+  - each chapter's opening topic summary ("Motives to the present
+    work--Reception of the Author's first publication--...");
+  - Coleridge's own footnotes, collected after Chapter XXIV; notes are a
+    different kind of writing from the running argument;
+  - the German epigraph and its translation, which come before Chapter I.
+- **Quotation:** set-off quotation is indented and dropped by the indent rule.
+  Some sits flush left, so three rules are added for this edition:
+  - **Non-English paragraphs** are dropped by a share-of-English-function-words
+    test, `mostly_english`, available to every edition. English prose scores
+    about 0.4; the Latin and German passages score 0.01–0.08.
+  - **A quotation opening a paragraph** is cut, and his continuation kept
+    ("“Esemplastic. The word is not in Johnson...” Neither have, I...").
+    A paragraph whose opening quotation never closes is one paragraph of a
+    longer quotation, and is dropped. One deliberate casualty: the "letter
+    from a friend" in Chapter XIII, which Coleridge wrote himself but
+    presents as a quotation.
+  - **"TRANSLATION." paragraphs**, his renderings of others' words, are
+    dropped.
+- **Checks:**
+  - all 27 units present;
+  - no paragraph opens with a quotation mark, and none is non-English;
+  - the paragraphs dense with quotation marks are his own analysis of short
+    quoted phrases;
+  - three random long paragraphs were read, all clean.
+
+### Not used
+
+His *Literary Remains*, *Aids to Reflection* and *Table Talk* are on Gutenberg.
+*Table Talk* is excluded as speech transcribed by another hand. The other two
+are not needed: the *Biographia* alone gives about 95,000 words of argued
+prose.
+
 ## Changes that affected every edition
 
 Made while adding Burns, and checked against the earlier output letter by
@@ -367,6 +462,10 @@ letter:
   ("JOHN KEATS alias JUNKETS.") is a signature. One or two words ending in
   punctuation ("Maybole,.") is an address stub. Salutations are stripped after
   both, so a date stub at the top cannot hide one.
+- **Compounds broken at a line end are rejoined** ("anti-" / "ministerial"
+  became "anti- ministerial"). A line ending in a single hyphen joins the next
+  without a space; "--" keeps its space. Two units changed, and in both the
+  joined hyphen was the only difference.
 - **Every shared change is diffed against the previous output, letter by
   letter.** The last round changed 10 earlier letters, all improvements or
   trivial losses ("Adieu.", "Amen.").
